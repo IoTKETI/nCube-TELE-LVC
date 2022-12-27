@@ -223,13 +223,13 @@ function retrieve_my_cnt_name(callback) {
             // console.log(drone_info);
             fs.writeFileSync('drone_info.json', JSON.stringify(drone_info, null, 4), 'utf8');
 
+            tas_mav = require('./thyme_tas_mav')
+
             if (my_simul === 'on') {
                 mqtt_connect('127.0.0.1')
             } else {
                 mqtt_connect(my_host)
             }
-            tas_mav = require('./thyme_tas_mav')
-
             callback();
         } else {
             console.log('x-m2m-rsc : ' + rsc + ' <----' + res_body);
