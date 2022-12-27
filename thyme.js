@@ -68,8 +68,10 @@ function ready_mqtt_connect(serverip) {
 
         ready_mqtt_client.on('message', (topic, message) => {
             if (topic === sub_sim_info_for_start) {
-                let init_info = JSON.parse(JSON.stringify(message.toString()))
+                // TODO: 버퍼에 감싸서 보내는지, JSON 그대로 보내는지
+                let init_info = JSON.parse(message.toString())
                 my_drone_name = init_info.dronename
+                console.log(my_drone_name)
                 /*  dronename:
                     dronelocation: ???
                     Lat:
@@ -80,7 +82,7 @@ function ready_mqtt_connect(serverip) {
                 if (!started) {
                     // TODO: start sitl
                     exec('sh start_sitl.sh ' + init_info.Lat + ' ' + init_info.Lon + ' ' + init_info.Alt + ' ' + init_info.Hdg, {cwd: process.cwd()});
-                    require('./tele_rf')
+                    // require('./tele_rf')
                     ready_mqtt_client.publish(pub_start_res, "SUCCESS-SITL has started.")
                 } else {
                     ready_mqtt_client.publish(pub_start_res, "FAIL-SITL is already running.")
