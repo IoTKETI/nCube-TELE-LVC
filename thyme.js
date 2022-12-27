@@ -69,6 +69,7 @@ function ready_mqtt_connect(serverip) {
         ready_mqtt_client.on('message', (topic, message) => {
             if (topic === sub_sim_info_for_start) {
                 let init_info = JSON.parse(JSON.stringify(message.toString()))
+                my_drone_name = init_info.dronename
                 /*  dronename:
                     dronelocation: ???
                     Lat:
