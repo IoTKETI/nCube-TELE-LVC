@@ -13,7 +13,6 @@ global.my_gcs_name = ''
 global.my_simul = 'on'
 global.my_sysid = 250
 
-
 let mobius_sub_rc_topic = '/Mobius/'
 global.mobius_pub_drone_topic = '/Mobius/'
 
@@ -181,10 +180,10 @@ function retrieve_my_cnt_name(callback) {
 
             info = {};
             info.parent = '/Mobius/' + drone_info.gcs + '/Drone_Data';
-            info.name = drone_info.drone;
+            info.name = my_drone_name;
             conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
-            info.parent = '/Mobius/' + drone_info.gcs + '/Drone_Data/' + drone_info.drone;
+            info.parent = '/Mobius/' + drone_info.gcs + '/Drone_Data/' + my_drone_name;
             info.name = my_sortie_name;
             conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
@@ -210,7 +209,7 @@ function retrieve_my_cnt_name(callback) {
 
             info = {};
             info.parent = '/Mobius/' + drone_info.gcs + '/GCS_Data';
-            info.name = drone_info.drone;
+            info.name = my_drone_name;
             conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
             my_command_parent_name = info.parent;
