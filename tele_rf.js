@@ -393,11 +393,18 @@ function mqtt_connect(serverip) {
                     console.log('[mqtt] mobius_sub_rc_topic is subscribed: ' + mobius_sub_rc_topic)
                 })
             }
+            if (my_command_name !== '') {
+                mqtt_client.subscribe(my_command_name, () => {
+                    console.log('[mqtt] my_command_name is subscribed: ' + my_command_name)
+                })
+            }
         })
 
         mqtt_client.on('message', (topic, message) => {
             if (topic === mobius_sub_rc_topic) {
-                tas_mav.gcs_noti_handler(message);
+                tas_mav.gcs_noti_handler(message.toString('hex'));
+            } else if (topic === my_command_name) {
+                tas_mav.gcs_noti_handler(message.toString('hex'));
             } else {
                 console.log('Received Message ' + message.toString('hex') + ' From ' + topic)
             }

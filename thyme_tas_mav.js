@@ -1,31 +1,10 @@
 /**
- * Created by Wonseok Jung in KETI on 2020-08-02.
+ * Created by Wonseok Jung in KETI on 2022-12-27.
  */
 
 const moment = require('moment')
-const fs = require('fs')
-const {exec} = require('child_process')
 const dgram = require("dgram");
-const mqtt = require("mqtt")
-const {nanoid} = require("nanoid")
-
 const mavlink = require('./mavlibrary/mavlink.js')
-
-let local_mqtt_client = null
-let sub_gcs_rf_topic = '/TELE/gcs/rf'
-let sub_gcs_lte_topic = '/TELE/gcs/lte'
-let pub_drone_topic = '/TELE/drone'
-let pub_sortie_topic = '/TELE/sorite'
-let pub_parse_global_position_int = '/TELE/drone/gpi'
-let pub_parse_heartbeat = '/TELE/drone/hb'
-let pub_parse_wp_yaw_behavior = '/TELE/drone/wp_yaw_behavior'
-let pub_parse_distance_sensor = '/TELE/drone/distance_sensor'
-let pub_parse_timesync = '/TELE/drone/timesync'
-let pub_parse_system_time = '/TELE/drone/system_time'
-
-let my_sortie_name = 'disarm'
-
-let GCSData = {}
 
 let mavPortNum = '/dev/ttyAMA0';
 let mavBaudrate = '115200';
@@ -49,6 +28,8 @@ exports.ready = function tas_ready() {
 }
 
 let control = {};
+
+const RC_RATE = 0.64;
 
 function SBUS2RC(x) {
     return Math.round((x * 8 + 1 - 1000) * RC_RATE + 1500);
@@ -101,7 +82,7 @@ function gcs_noti_handler(message) {
     // console.log('[GCS]', message)
     var ver = message.substring(0, 2)
     if (ver === 'ff') {
-        // MAVLink로 변환된 조종 신호를 시뮬레이터(KETI_Simul_1)에 전달
+        // MAVLink로 변환된 조종 신호를 시뮬레이터 또는 FC에 전달
         let rc_data = message.toString('hex');
         let rc_value = {};
         rc_value.target_system = my_sysid;
@@ -129,7 +110,7 @@ function gcs_noti_handler(message) {
             if (rc_signal == null) {
                 console.log("mavlink message is null");
             } else {
-                if (my_simul === 'on') {
+                if (my_simul === 'on') { // SITL에 전달
                     if (sitlUDP2 != null) {
                         sitlUDP2.send(rc_signal, 0, rc_signal.length, PORT2, HOST,
                             function (err) {
@@ -142,7 +123,7 @@ function gcs_noti_handler(message) {
                     } else {
                         console.log('send cmd via sitlUDP2')
                     }
-                } else {
+                } else { // FC에 전달
                     if (mavPort != null) {
                         if (mavPort.isOpen) {
                             mavPort.write(rc_signal);
@@ -199,12 +180,11 @@ function gcs_noti_handler(message) {
             control.target_component = Buffer.from(target_component, 'hex').readUInt8(0);
             control.confirmation = Buffer.from(confirmation, 'hex').readUInt8(0);
 
-            if (control.command === '248') {
+            if (control.command.toString() === '248') {
                 let control_channels = {}
                 control_channels.channel = control.param1
                 control_channels.value = control.param2
 
-                local_mqtt_client.publish('/Control', JSON.stringify(control_channels))
                 console.log('============================================================')
                 console.log('target_system - ' + control.target_system)
                 console.log('target_component - ' + control.target_component)
@@ -245,95 +225,6 @@ function gcs_noti_handler(message) {
             } else {
             }
         }
-    }
-}
-
-function local_mqtt_connect(serverip) {
-    if (local_mqtt_client === null) {
-        if (conf.usesecure === 'disable') {
-            var connectOptions = {
-                host: serverip,
-                port: conf.cse.mqttport,
-                protocol: "mqtt",
-                keepalive: 10,
-                clientId: 'TELE_MAV_' + nanoid(15),
-                protocolId: "MQTT",
-                protocolVersion: 4,
-                clean: true,
-                reconnectPeriod: 2000,
-                connectTimeout: 2000,
-                rejectUnauthorized: false
-            }
-        } else {
-            connectOptions = {
-                host: serverip,
-                port: conf.cse.mqttport,
-                protocol: "mqtts",
-                keepalive: 10,
-                clientId: 'TELE_MAV_' + nanoid(15),
-                protocolId: "MQTT",
-                protocolVersion: 4,
-                clean: true,
-                reconnectPeriod: 2000,
-                connectTimeout: 2000,
-                key: fs.readFileSync("./server-key.pem"),
-                cert: fs.readFileSync("./server-crt.pem"),
-                rejectUnauthorized: false
-            }
-        }
-
-        local_mqtt_client = mqtt.connect(connectOptions)
-
-        local_mqtt_client.on('connect', function () {
-            console.log('local_mqtt is connected')
-
-            if (sub_gcs_rf_topic !== '') {
-                local_mqtt_client.subscribe(sub_gcs_rf_topic, function () {
-                    console.log('[local_mqtt] sub_gcs_rf_topic is subscribed: ' + sub_gcs_rf_topic)
-                })
-            }
-            if (sub_gcs_lte_topic !== '') {
-                local_mqtt_client.subscribe(sub_gcs_lte_topic, function () {
-                    console.log('[local_mqtt] sub_gcs_lte_topic is subscribed: ' + sub_gcs_lte_topic)
-                })
-            }
-        })
-
-        local_mqtt_client.on('message', function (topic, message) {
-            if (topic === sub_gcs_rf_topic) {
-                let gcsData = message.toString('hex')
-                if (gcsData.substring(0, 2) === 'fe') {
-                    let sequence = parseInt(gcsData.substring(4, 6), 16)
-                    GCSData[sequence] = gcsData
-                } else {
-                    let sequence = parseInt(gcsData.substring(8, 10), 16)
-                    GCSData[sequence] = gcsData
-                }
-                // console.log('[RF]', gcsData)
-                gcs_noti_handler(gcsData)
-            } else if (topic === sub_gcs_lte_topic) {
-                let gcsData = message.toString('hex')
-                if (gcsData.substring(0, 2) === 'fe') {
-                    let sequence = parseInt(gcsData.substring(4, 6), 16)
-                    if (GCSData.hasOwnProperty(sequence)) {
-                        delete GCSData[sequence]
-                        return
-                    }
-                } else {
-                    let sequence = parseInt(gcsData.substring(4, 6), 16)
-                    if (GCSData.hasOwnProperty(sequence)) {
-                        delete GCSData[sequence]
-                        return
-                    }
-                }
-                // console.log('[LTE]', gcsData)
-                gcs_noti_handler(gcsData)
-            }
-        })
-
-        local_mqtt_client.on('error', function (err) {
-            console.log('[local_mqtt] (error) ' + err.message)
-        })
     }
 }
 
@@ -530,8 +421,6 @@ function parseMavFromDrone(mavPacket) {
             fc.heartbeat.custom_mode = Buffer.from(custom_mode, 'hex').readUInt32LE(0)
             fc.heartbeat.system_status = Buffer.from(system_status, 'hex').readUInt8(0)
             fc.heartbeat.mavlink_version = Buffer.from(mavlink_version, 'hex').readUInt8(0)
-
-            local_mqtt_client.publish(pub_parse_heartbeat, JSON.stringify(fc.heartbeat))
 
             if (fc.heartbeat.base_mode & 0x80) {
                 if (flag_base_mode === 3) {
