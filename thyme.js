@@ -82,11 +82,11 @@ function ready_mqtt_connect(serverip) {
                     // TODO: start sitl
                     exec('sh start_sitl.sh ' + init_info.Lat + ' ' + init_info.Lon + ' ' + init_info.Alt + ' ' + init_info.Hdg, {cwd: process.cwd()});
                     require('./tele_rf')
+                    started = true
                     ready_mqtt_client.publish(pub_start_res, "SUCCESS-SITL has started.")
                 } else {
                     ready_mqtt_client.publish(pub_start_res, "FAIL-SITL is already running.")
                 }
-
             } else {
                 console.log('Received Message ' + message.toString('hex') + ' From ' + topic)
             }

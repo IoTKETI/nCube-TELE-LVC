@@ -20,7 +20,7 @@ global.sitlUDP2 = null;
 if (my_simul === 'on') {
     sitlUDP2 = dgram.createSocket('udp4');
 } else {
-    const {SerialPort} = require('serialport')
+    let {SerialPort} = require('serialport')
 }
 
 exports.ready = function tas_ready() {
