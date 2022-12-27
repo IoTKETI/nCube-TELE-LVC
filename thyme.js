@@ -80,7 +80,17 @@ function ready_mqtt_connect(serverip) {
                 */
                 if (!started) {
                     // TODO: start sitl
-                    exec('sh start_sitl.sh ' + init_info.Lat + ' ' + init_info.Lon + ' ' + init_info.Alt + ' ' + init_info.Hdg, {cwd: process.cwd()});
+                    exec('sh start_sitl.sh ' + init_info.Lat + ' ' + init_info.Lon + ' ' + init_info.Alt + ' ' + init_info.Hdg, {cwd: process.cwd()}, (error, stdout, stderr) => {
+                        if (error) {
+                            console.log('error - ' + error)
+                        }
+                        if (stdout) {
+                            console.log('stdout - ' + stdout)
+                        }
+                        if (stderr) {
+                            console.log('stderr - ' + stderr)
+                        }
+                    });
                     require('./tele_rf')
                     started = true
                     ready_mqtt_client.publish(pub_start_res, "SUCCESS-SITL has started.")
