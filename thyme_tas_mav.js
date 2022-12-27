@@ -78,7 +78,7 @@ function mavlinkGenerateMessage(src_sys_id, src_comp_id, type, params) {
     return genMsg;
 }
 
-function gcs_noti_handler(message) {
+exports.gcs_noti_handler = function (message) {
     // console.log('[GCS]', message)
     var ver = message.substring(0, 2)
     if (ver === 'ff') {
