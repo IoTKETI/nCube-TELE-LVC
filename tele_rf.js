@@ -6,7 +6,7 @@ const {nanoid} = require("nanoid")
 const fs = require("fs")
 
 global.sh_adn = require('./http_adn');
-const tas_mav = require('./thyme_tas_mav')
+let tas_mav = null
 
 global.my_host = '127.0.0.1'
 global.my_gcs_name = ''
@@ -216,7 +216,7 @@ function retrieve_my_cnt_name(callback) {
             my_command_name = my_command_parent_name + '/' + info.name;
 
             MQTT_SUBSCRIPTION_ENABLE = 1;
-            sh_state = 'crtct';
+            sh_state = 'crtae';
             setTimeout(http_watchdog, normal_interval);
 
             drone_info.id = conf.ae.name;
@@ -228,6 +228,7 @@ function retrieve_my_cnt_name(callback) {
             } else {
                 mqtt_connect(my_host)
             }
+            tas_mav = require('./thyme_tas_mav')
 
             callback();
         } else {
