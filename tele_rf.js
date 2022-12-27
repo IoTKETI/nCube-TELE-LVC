@@ -6,7 +6,7 @@ const {nanoid} = require("nanoid")
 const fs = require("fs")
 
 global.sh_adn = require('./http_adn');
-const tas_mav = require('./thyme_tas_mav')
+var tas_mav = null
 
 global.my_host = '127.0.0.1'
 global.my_gcs_name = ''
@@ -222,6 +222,8 @@ function retrieve_my_cnt_name(callback) {
             drone_info.id = conf.ae.name;
             // console.log(drone_info);
             fs.writeFileSync('drone_info.json', JSON.stringify(drone_info, null, 4), 'utf8');
+
+            tas_mav = require('./thyme_tas_mav')
 
             if (my_simul === 'on') {
                 mqtt_connect('127.0.0.1')
