@@ -79,7 +79,7 @@ function ready_mqtt_connect(serverip) {
                     // TODO: heading(Hdg) 값 필요함, dronelocation 무슨 값인지??
                 */
                 if (!started) {
-                    // TODO: start sitl
+                    console.log("sh start_sitl.sh ' + init_info.Lat + ' ' + init_info.Lon + ' ' + init_info.Alt + ' ' + init_info.Hdg")
                     exec('sh start_sitl.sh ' + init_info.Lat + ' ' + init_info.Lon + ' ' + init_info.Alt + ' ' + init_info.Hdg, {cwd: process.cwd()}, (error, stdout, stderr) => {
                         if (error) {
                             console.log('error - ' + error)
