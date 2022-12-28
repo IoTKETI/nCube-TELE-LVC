@@ -4,6 +4,7 @@
 
 const moment = require('moment')
 const dgram = require("dgram");
+const {SerialPort} = require('serialport')
 const mavlink = require('./mavlibrary/mavlink.js')
 
 let mavPortNum = '/dev/ttyAMA0';
@@ -19,8 +20,6 @@ global.sitlUDP2 = null;
 
 if (my_simul === 'on') {
     sitlUDP2 = dgram.createSocket('udp4');
-} else {
-    let {SerialPort} = require('serialport')
 }
 
 exports.ready = function tas_ready() {
@@ -143,87 +142,17 @@ exports.gcs_noti_handler = function (message) {
             base_offset = 12
         }
 
-        if (msg_id === mavlink.MAVLINK_MSG_ID_COMMAND_LONG) {
-            console.log('[send_reserved_control_command]', message)
-
-            var param1 = message.substring(base_offset, base_offset + 8).toLowerCase();
-            base_offset += 8;
-            var param2 = message.substring(base_offset, base_offset + 8).toLowerCase();
-            base_offset += 8;
-            var param3 = message.substring(base_offset, base_offset + 8).toLowerCase();
-            base_offset += 8;
-            var param4 = message.substring(base_offset, base_offset + 8).toLowerCase();
-            base_offset += 8;
-            var param5 = message.substring(base_offset, base_offset + 8).toLowerCase();
-            base_offset += 8;
-            var param6 = message.substring(base_offset, base_offset + 8).toLowerCase();
-            base_offset += 8;
-            var param7 = message.substring(base_offset, base_offset + 8).toLowerCase();
-            base_offset += 8;
-            var command = message.substring(base_offset, base_offset + 4).toLowerCase();
-            base_offset += 4;
-            var target_system = message.substring(base_offset, base_offset + 2).toLowerCase();
-            base_offset += 2;
-            var target_component = message.substring(base_offset, base_offset + 2).toLowerCase();
-            base_offset += 2;
-            var confirmation = message.substring(base_offset, base_offset + 2).toLowerCase();
-
-            control.param1 = Buffer.from(param1, 'hex').readFloatLE(0);
-            control.param2 = Buffer.from(param2, 'hex').readFloatLE(0);
-            control.param3 = Buffer.from(param3, 'hex').readFloatLE(0);
-            control.param4 = Buffer.from(param4, 'hex').readFloatLE(0);
-            control.param5 = Buffer.from(param5, 'hex').readFloatLE(0);
-            control.param6 = Buffer.from(param6, 'hex').readFloatLE(0);
-            control.param7 = Buffer.from(param7, 'hex').readFloatLE(0);
-            control.command = Buffer.from(command, 'hex').readUInt16LE(0);
-            control.target_system = Buffer.from(target_system, 'hex').readUInt8(0);
-            control.target_component = Buffer.from(target_component, 'hex').readUInt8(0);
-            control.confirmation = Buffer.from(confirmation, 'hex').readUInt8(0);
-
-            if (control.command.toString() === '248') {
-                let control_channels = {}
-                control_channels.channel = control.param1
-                control_channels.value = control.param2
-
-                console.log('============================================================')
-                console.log('target_system - ' + control.target_system)
-                console.log('target_component - ' + control.target_component)
-                console.log('command - ' + control.command)
-                console.log('confirmation - ' + control.confirmation)
-                console.log('param1 - ' + control.param1)
-                console.log('param2 - ' + control.param2)
-                console.log('param3 - ' + control.param3)
-                console.log('param4 - ' + control.param4)
-                console.log('param5 - ' + control.param5)
-                console.log('param6 - ' + control.param6)
-                console.log('param7 - ' + control.param7)
-                console.log('============================================================')
-            } else {
-                if (sitlUDP2 != null) {
-                    sitlUDP2.send(Buffer.from(message, 'hex'), 0, Buffer.from(message, 'hex').length, PORT2, HOST,
-                        function (err) {
-                            if (err) {
-                                console.log('UDP message send error', err);
-                                return;
-                            }
-                        }
-                    );
-                } else {
-                    console.log('send cmd via sitlUDP2')
-                }
-            }
-        } else {
-            if (sitlUDP2 != null) {
-                sitlUDP2.send(Buffer.from(message, 'hex'), 0, Buffer.from(message, 'hex').length, PORT2, HOST,
-                    function (err) {
-                        if (err) {
-                            console.log('UDP message send error', err);
-                            return;
-                        }
+        if (sitlUDP2 != null) {
+            sitlUDP2.send(Buffer.from(message, 'hex'), 0, Buffer.from(message, 'hex').length, PORT2, HOST,
+                function (err) {
+                    if (err) {
+                        console.log('UDP message send error', err);
+                        return;
                     }
-                );
-            } else {
-            }
+                }
+            );
+        } else {
+            console.log('send cmd via sitlUDP2')
         }
     }
 }
