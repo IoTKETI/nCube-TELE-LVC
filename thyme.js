@@ -72,9 +72,17 @@ function ready_mqtt_connect(serverip) {
                 // TODO: 버퍼에 감싸서 보내는지, JSON 그대로 보내는지
                 try {
                     let init_info = JSON.parse(message.toString())
-                    my_drone_name = init_info.dronename
+                    if (init_info.hasOwnProperty('dronename')) {
+                        my_drone_name = init_info.dronename
+                    } else {
+                        my_drone_name = "KETI_LVC_Drone"
+                    }
                     // TODO: simul인지 아닌지
-                    my_simul = init_info.simul.toString().toLowerCase()
+                    if (init_info.hasOwnProperty('simul')) {
+                        my_simul = init_info.simul.toString().toLowerCase()
+                    } else {
+                        my_simul = "on"
+                    }
                     /*  "dronename": "LVC_Drone",
                         "dronelocation": "37.40313329147436, 127.16083110569653, 0,0, 0",
                         "Lat": 37.40313329147436,
