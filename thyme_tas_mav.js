@@ -167,7 +167,7 @@ exports.gcs_noti_handler = function (message) {
             } else {
                 if (mqtt_client !== null) {
                     mqtt_client.publish(mission_topic, mission_signal, () => {
-                        console.log('publish ' + mission_signal.toString('hex') + ' to ' + mission_topic)
+                        // console.log('publish ' + mission_signal.toString('hex') + ' to ' + mission_topic)
                     })
                 }
             }

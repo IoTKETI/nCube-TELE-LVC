@@ -70,35 +70,39 @@ function ready_mqtt_connect(serverip) {
         ready_mqtt_client.on('message', (topic, message) => {
             if (topic === sub_sim_info_for_start) {
                 // TODO: 버퍼에 감싸서 보내는지, JSON 그대로 보내는지
-                let init_info = JSON.parse(message.toString())
-                my_drone_name = init_info.dronename
-                // TODO: simul인지 아닌지
-                my_simul
-                /*  dronename:
-                    dronelocation: ???
-                    Lat:
-                    Lon:
-                    Alt:
-                    // TODO: heading(Hdg) 값 필요함, dronelocation 무슨 값인지??
-                */
-                if (!started) {
-                    console.log('sh start_sitl.sh ' + init_info.Lat + ' ' + init_info.Lon + ' ' + init_info.Alt + ' ' + init_info.Hdg)
-                    exec('sh start_sitl.sh ' + init_info.Lat + ' ' + init_info.Lon + ' ' + init_info.Alt + ' ' + init_info.Hdg, {cwd: process.cwd()}, (error, stdout, stderr) => {
-                        if (error) {
-                            console.log('error - ' + error)
-                        }
-                        if (stdout) {
-                            console.log('stdout - ' + stdout)
-                        }
-                        if (stderr) {
-                            console.log('stderr - ' + stderr)
-                        }
-                    });
-                    require('./tele_rf')
-                    started = true
-                    ready_mqtt_client.publish(pub_start_res, "SUCCESS-SITL has started.")
-                } else {
-                    ready_mqtt_client.publish(pub_start_res, "FAIL-SITL is already running.")
+                try {
+                    let init_info = JSON.parse(message.toString())
+                    my_drone_name = init_info.dronename
+                    // TODO: simul인지 아닌지
+                    my_simul = init_info.simul.toString().toLowerCase()
+                    /*  "dronename": "LVC_Drone",
+                        "dronelocation": "37.40313329147436, 127.16083110569653, 0,0, 0",
+                        "Lat": 37.40313329147436,
+                        "Lon": 127.16083110569653,
+                        "Alt": 0,
+                        "Hdg": 0  // TODO: heading(Hdg) 값 필요함, dronelocation 무슨 값인지??
+                    */
+                    if (!started) {
+                        console.log('sh start_sitl.sh ' + init_info.Lat + ' ' + init_info.Lon + ' ' + init_info.Alt + ' ' + init_info.Hdg)
+                        exec('sh start_sitl.sh ' + init_info.Lat + ' ' + init_info.Lon + ' ' + init_info.Alt + ' ' + init_info.Hdg, {cwd: process.cwd()}, (error, stdout, stderr) => {
+                            if (error) {
+                                console.log('error - ' + error)
+                            }
+                            if (stdout) {
+                                console.log('stdout - ' + stdout)
+                            }
+                            if (stderr) {
+                                console.log('stderr - ' + stderr)
+                            }
+                        });
+                        require('./tele_rf')
+                        started = true
+                        ready_mqtt_client.publish(pub_start_res, "SUCCESS-SITL has started.")
+                    } else {
+                        ready_mqtt_client.publish(pub_start_res, "FAIL-SITL is already running.")
+                    }
+                } catch (e) {
+                    console.log("Invalid initial information of drone")
                 }
             } else {
                 console.log('Received Message ' + message.toString('hex') + ' From ' + topic)
