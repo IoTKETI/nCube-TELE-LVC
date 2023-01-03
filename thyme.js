@@ -19,6 +19,7 @@ let pub_start_res = '/LVC/started'
 
 global.started = false
 global.my_drone_name = ''
+global.my_simul = 'on'
 
 function ready_mqtt_connect(serverip) {
     if (ready_mqtt_client === null) {
@@ -71,6 +72,8 @@ function ready_mqtt_connect(serverip) {
                 // TODO: 버퍼에 감싸서 보내는지, JSON 그대로 보내는지
                 let init_info = JSON.parse(message.toString())
                 my_drone_name = init_info.dronename
+                // TODO: simul인지 아닌지
+                my_simul
                 /*  dronename:
                     dronelocation: ???
                     Lat:

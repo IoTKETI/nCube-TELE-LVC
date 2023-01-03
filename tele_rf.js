@@ -10,7 +10,6 @@ let tas_mav = null
 
 global.my_host = '127.0.0.1'
 global.my_gcs_name = ''
-global.my_simul = 'on'
 global.my_sysid = 250
 
 let mobius_sub_rc_topic = '/Mobius/'
