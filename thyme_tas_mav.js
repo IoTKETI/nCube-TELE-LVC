@@ -10,6 +10,8 @@ let mavPortNum = '/dev/ttyAMA0';
 let mavBaudrate = '115200';
 let mavPort = null
 
+let mission_topic = '/Mobius/' + drone_info.gcs + '/Mission_Data/' + my_drone_name;
+
 let HOST = '127.0.0.1';
 let PORT1 = 14555; // output: SITL --> GCS
 let PORT2 = 14556; // input : GCS --> SITL
@@ -105,6 +107,7 @@ exports.gcs_noti_handler = function (message) {
         rc_value.ch16_raw = SBUS2RC(parseInt(rc_data.substring(32, 34), 16));
         rc_value.ch17_raw = SBUS2RC(parseInt(rc_data.substring(34, 36), 16));
         rc_value.ch18_raw = SBUS2RC(parseInt(rc_data.substring(36, 38), 16));
+
         try {
             let rc_signal = mavlinkGenerateMessage(255, 0xbe, mavlink.MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE, rc_value);
             if (rc_signal == null) {
@@ -129,6 +132,44 @@ exports.gcs_noti_handler = function (message) {
                             mavPort.write(rc_signal);
                         }
                     }
+                }
+            }
+        } catch (ex) {
+            console.log('[ERROR] ' + ex);
+        }
+
+        let mission_data = message.toString('hex');
+        let mission_value = {};
+        mission_value.target_system = my_sysid;
+        mission_value.target_component = 1;
+        mission_value.ch1_raw = SBUS2RC(parseInt(mission_data.substring(38, 40), 16));
+        mission_value.ch2_raw = SBUS2RC(parseInt(mission_data.substring(40, 42), 16));
+        mission_value.ch3_raw = SBUS2RC(parseInt(mission_data.substring(42, 44), 16));
+        mission_value.ch4_raw = SBUS2RC(parseInt(mission_data.substring(44, 46), 16));
+        mission_value.ch5_raw = SBUS2RC(parseInt(mission_data.substring(46, 48), 16));
+        mission_value.ch6_raw = SBUS2RC(parseInt(mission_data.substring(48, 50), 16));
+        mission_value.ch7_raw = SBUS2RC(parseInt(mission_data.substring(50, 52), 16));
+        mission_value.ch8_raw = SBUS2RC(parseInt(mission_data.substring(52, 54), 16));
+        mission_value.ch9_raw = SBUS2RC(parseInt(mission_data.substring(54, 56), 16));
+        mission_value.ch10_raw = SBUS2RC(parseInt(mission_data.substring(56, 58), 16));
+        mission_value.ch11_raw = SBUS2RC(parseInt(mission_data.substring(58, 60), 16));
+        mission_value.ch12_raw = SBUS2RC(parseInt(mission_data.substring(60, 62), 16));
+        mission_value.ch13_raw = SBUS2RC(parseInt(mission_data.substring(62, 64), 16));
+        mission_value.ch14_raw = SBUS2RC(parseInt(mission_data.substring(64, 66), 16));
+        mission_value.ch15_raw = SBUS2RC(parseInt(mission_data.substring(66, 68), 16));
+        mission_value.ch16_raw = SBUS2RC(parseInt(mission_data.substring(68, 70), 16));
+        mission_value.ch17_raw = SBUS2RC(parseInt(mission_data.substring(70, 72), 16));
+        mission_value.ch18_raw = SBUS2RC(parseInt(mission_data.substring(72, 74), 16));
+
+        try {
+            let mission_signal = mavlinkGenerateMessage(255, 0xbe, mavlink.MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE, mission_value);
+            if (mission_signal == null) {
+                console.log("mavlink message is null");
+            } else {
+                if (mqtt_client !== null) {
+                    mqtt_client.publish(mission_topic, mission_signal, () => {
+                        console.log('publish ' + mission_signal.toString('hex') + ' to ' + mission_topic)
+                    })
                 }
             }
         } catch (ex) {
