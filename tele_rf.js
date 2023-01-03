@@ -8,7 +8,6 @@ const fs = require("fs")
 global.sh_adn = require('./http_adn');
 let tas_mav = null
 
-global.my_host = '127.0.0.1'
 global.my_gcs_name = ''
 global.my_sysid = 250
 
@@ -226,7 +225,7 @@ function retrieve_my_cnt_name(callback) {
             if (my_simul === 'on') {
                 mqtt_connect('127.0.0.1')
             } else {
-                mqtt_connect(my_host)
+                mqtt_connect(conf.cse.host)
             }
 
             callback();
