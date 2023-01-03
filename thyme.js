@@ -102,7 +102,7 @@ function ready_mqtt_connect(serverip) {
                         ready_mqtt_client.publish(pub_start_res, "FAIL-SITL is already running.")
                     }
                 } catch (e) {
-                    console.log("Invalid initial information of drone")
+                    console.log("Invalid initial information of drone\n" + e)
                 }
             } else {
                 console.log('Received Message ' + message.toString('hex') + ' From ' + topic)
