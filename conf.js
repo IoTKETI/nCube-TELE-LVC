@@ -3,6 +3,12 @@
  */
 
 const fs = require('fs');
+const {nanoid} = require("nanoid");
+
+global.my_drone_name = 'LVC_Drone';
+global.my_simul = 'on';
+global.my_sysid = 250;
+global.my_gcs_name = '';
 
 let conf = {};
 let cse = {};
@@ -14,10 +20,26 @@ let acp = {};
 conf.useprotocol = 'http'; // select one for 'http' or 'mqtt' or 'coap' or 'ws'
 
 // build cse
-let approval_host = {}
-approval_host.ip = '127.0.0.1';
+let ae_name = {};
+try {
+    ae_name = JSON.parse(fs.readFileSync('../flight.json', 'utf8'));
+} catch (e) {
+    console.log('can not find [ ../flight.json ] file');
+    ae_name.host = '127.0.0.1';
+    ae_name.gcs = 'KETI_LVC';
+    ae_name.drone_name = "LVC_Drone";
+    ae_name.sysid = 251;
+    ae_name.simul = "on";
 
-cse.host        = approval_host.ip;
+    fs.writeFileSync('../flight.json', JSON.stringify(ae_name, null, 4), 'utf8');
+}
+
+my_gcs_name = ae_name.gcs;
+my_drone_name = ae_name.drone_name;
+my_sysid = ae_name.sysid;
+my_simul = ae_name.simul;
+
+cse.host        = ae_name.host;
 cse.port        = '7579';
 cse.name        = 'Mobius';
 cse.id          = '/Mobius2';
@@ -25,85 +47,24 @@ cse.mqttport    = '1883';
 cse.wsport      = '7577';
 
 // build ae
-let ae_name = {};
-try {
-    ae_name = JSON.parse(fs.readFileSync('../flight.json', 'utf8'));
-} catch (e) {
-    console.log('can not find [ ../flight.json ] file')
-    ae_name.approval_gcs = 'LVC';
-    ae_name.flight = 'Dione';
-    fs.writeFileSync('../flight.json', JSON.stringify(ae_name, null, 4), 'utf8');
-}
-
-ae.approval_gcs = ae_name.approval_gcs;
-ae.name = ae_name.flight;
+ae.name = my_gcs_name;
 
 ae.id = 'S' + ae.name;
 
 ae.parent       = '/' + cse.name;
-ae.appid        = require('shortid').generate();
+ae.appid        = nanoid(9);
 ae.port         = '9727';
 ae.bodytype     = 'json'; // select 'json' or 'xml' or 'cbor'
 ae.tas_mav_port = '3105';
 ae.tas_sec_port = '3105';
-
-
-// build cnt
-// var count = 0;
-// cnt_arr[count] = {};
-// cnt_arr[count].parent = '/' + cse.name + '/' + ae.name;
-// cnt_arr[count++].name = '0.2.481.1.114.IND-0004.24';
-// cnt_arr[count] = {};
-// cnt_arr[count].parent = '/' + cse.name + '/' + ae.name;
-// cnt_arr[count++].name = 'tvoc';
-//cnt_arr[count] = {};
-//cnt_arr[count].parent = '/' + cse.name + '/' + ae.name;
-//cnt_arr[count++].name = 'timer';
-
-// build sub
-// count = 0;
-//sub_arr[count] = {};
-//sub_arr[count].parent = '/' + cse.name + '/' + ae.name + '/' + cnt_arr[1].name;
-//sub_arr[count].name = 'sub-ctrl';
-//sub_arr[count++].nu = 'mqtt://' + cse.host + '/' + ae.id;
-
-// --------
-// sub_arr[count] = {};
-// sub_arr[count].parent = '/' + cse.name + '/' + ae.name + '/' + cnt_arr[1].name;
-// sub_arr[count].name = 'sub';
-// sub_arr[count++].nu = 'mqtt://' + cse.host + '/' + ae.id + '?ct=' + ae.bodytype; // mqtt
-//sub_arr[count++].nu = 'http://' + ip.address() + ':' + ae.port + '/noti?ct=json'; // http
-//sub_arr[count++].nu = 'Mobius/'+ae.name; // mqtt
-// --------
-
-// sub_arr[count] = {};
-// sub_arr[count].parent = '/' + cse.name + '/' + ae.name + '/' + cnt_arr[1].name;
-// sub_arr[count].name = 'sub1';
-// sub_arr[count++].nu = 'mqtt://' + cse.host + '/' + ae.id + '1?ct=xml'; // mqtt
-// sub_arr[count] = {};
-// sub_arr[count].parent = '/' + cse.name + '/' + ae.name + '/' + cnt_arr[1].name;
-// sub_arr[count].name = 'sub2';
-// sub_arr[count++].nu = 'mqtt://' + cse.host + '/' + ae.id + '2?ct=xml'; // mqtt
-// sub_arr[count] = {};
-// sub_arr[count].parent = '/' + cse.name + '/' + ae.name + '/' + cnt_arr[1].name;
-// sub_arr[count].name = 'sub3';
-// sub_arr[count++].nu = 'mqtt://' + cse.host + '/' + ae.id + '3?ct=xml'; // mqtt
-
-
-/*// --------
-sub_arr[count] = {};
-sub_arr[count].parent = '/' + cse.name + '/' + ae.name + '/' + cnt_arr[1].name;
-sub_arr[count].name = 'sub2';
-//sub_arr[count++].nu = 'http://' + ip.address() + ':' + ae.port + '/noti?ct=json'; // http
-//sub_arr[count++].nu = 'mqtt://' + cse.host + '/' + ae.id + '?rcn=9&ct=' + ae.bodytype; // mqtt
-sub_arr[count++].nu = 'mqtt://' + cse.host + '/' + ae.id + '?ct=json'; // mqtt
-// -------- */
 
 // build acp: not complete
 acp.parent = '/' + cse.name + '/' + ae.name;
 acp.name = 'acp-' + ae.name;
 acp.id = ae.id;
 
+conf.cnt = [];
+conf.sub = [];
 
 conf.usesecure = 'disable';
 

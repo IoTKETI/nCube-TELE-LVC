@@ -1,17 +1,14 @@
 /**
  * Created by Wonseok Jung in KETI on 2022-12-27.
  */
-const mqtt = require("mqtt")
-const {nanoid} = require("nanoid")
-const fs = require("fs")
+const mqtt = require("mqtt");
+const {nanoid} = require("nanoid");
+const fs = require("fs");
+const {exec} = require("child_process");
 
-global.sh_adn = require('./http_adn');
-let tas_mav = null
+let tas_mav = null;
 
-global.my_gcs_name = ''
-global.my_sysid = 250
-
-let mobius_sub_rc_topic = '/Mobius/'
+let mobius_sub_rc_topic = '/Mobius/';
 
 let MQTT_SUBSCRIPTION_ENABLE = 0;
 
@@ -24,6 +21,9 @@ global.my_command_name = '';
 
 const retry_interval = 2500;
 const normal_interval = 100;
+
+let sub_sim_info_for_start = '/LVC/start';
+global.pub_start_init = '/LVC/init';
 
 global.getType = function (p) {
     var type = 'string';
@@ -125,123 +125,64 @@ function create_sub_all(count, callback) {
     }
 }
 
-global.drone_info = {};
+function retrieve_my_cnt_name() {
+    mobius_sub_rc_topic = mobius_sub_rc_topic + my_gcs_name + '/RC_Data';
 
-function retrieve_my_cnt_name(callback) {
-    sh_adn.rtvct('/Mobius/' + conf.ae.approval_gcs + '/approval/' + conf.ae.name + '/la', 0, (rsc, res_body, count) => {
-        if (rsc == 2000) {
-            drone_info = res_body[Object.keys(res_body)[0]].con;
-            // console.log(drone_info);
+    console.log("gcs host is " + conf.cse.host);
 
-            if (drone_info.hasOwnProperty('update')) {
-                if (drone_info.update === 'enable' || drone_info.update === 'nCube') {
-                    const shell = require('shelljs')
+    var info = {};
+    info.parent = '/Mobius/' + my_gcs_name;
+    info.name = 'Drone_Data';
+    conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
-                    if (shell.exec('git reset --hard HEAD && git pull').code !== 0) {
-                        shell.echo('Error: command failed')
-                        shell.exit(1)
-                    } else {
-                        console.log('Finish update !');
-                        drone_info.update = 'disable';
-                        sh_adn.crtci('/Mobius/' + conf.ae.approval_gcs + '/approval/' + conf.ae.name, 0, JSON.stringify(drone_info), null, function () {
-                            if (drone_info.update === 'disable') {
-                                shell.exec('pm2 restart TELE-LVC')
-                            }
-                        });
-                    }
-                }
-            }
+    info = {};
+    info.parent = '/Mobius/' + my_gcs_name + '/Drone_Data';
+    info.name = my_drone_name;
+    conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
-            conf.sub = [];
-            conf.cnt = [];
-            conf.fc = [];
+    info.parent = '/Mobius/' + my_gcs_name + '/Drone_Data/' + my_drone_name;
+    info.name = my_sortie_name;
+    conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
-            if (drone_info.hasOwnProperty('gcs')) {
-                my_gcs_name = drone_info.gcs;
-            } else {
-                my_gcs_name = 'KETI_MUV';
-            }
-            mobius_sub_rc_topic = mobius_sub_rc_topic + my_gcs_name + '/RC_Data'
+    my_parent_cnt_name = info.parent;
+    my_cnt_name = my_parent_cnt_name + '/' + info.name;
 
-            if (drone_info.hasOwnProperty('host')) {
-                conf.cse.host = drone_info.host;
-            } else {
-            }
+    var info = {};
+    info.parent = '/Mobius/' + my_gcs_name;
+    info.name = 'GCS_Data';
+    conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
-            console.log("gcs host is " + conf.cse.host);
+    info = {};
+    info.parent = '/Mobius/' + my_gcs_name + '/GCS_Data';
+    info.name = my_drone_name;
+    conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
-            var info = {};
-            info.parent = '/Mobius/' + drone_info.gcs;
-            info.name = 'Drone_Data';
-            conf.cnt.push(JSON.parse(JSON.stringify(info)));
+    my_command_parent_name = info.parent;
+    my_command_name = my_command_parent_name + '/' + info.name;
 
-            info = {};
-            info.parent = '/Mobius/' + drone_info.gcs + '/Drone_Data';
-            info.name = my_drone_name;
-            conf.cnt.push(JSON.parse(JSON.stringify(info)));
+    MQTT_SUBSCRIPTION_ENABLE = 1;
+    sh_state = 'crtae';
+    setTimeout(http_watchdog, normal_interval);
 
-            info.parent = '/Mobius/' + drone_info.gcs + '/Drone_Data/' + my_drone_name;
-            info.name = my_sortie_name;
-            conf.cnt.push(JSON.parse(JSON.stringify(info)));
+    tas_mav = require('./thyme_tas_mav');
 
-            my_parent_cnt_name = info.parent;
-            my_cnt_name = my_parent_cnt_name + '/' + info.name;
-
-            if (drone_info.hasOwnProperty('secure')) {
-                my_secure = drone_info.secure;
-            } else {
-                my_secure = 'off';
-            }
-
-            if (drone_info.hasOwnProperty('system_id')) {
-                my_sysid = drone_info.system_id;
-            } else {
-                my_sysid = 8;
-            }
-
-            var info = {};
-            info.parent = '/Mobius/' + drone_info.gcs;
-            info.name = 'GCS_Data';
-            conf.cnt.push(JSON.parse(JSON.stringify(info)));
-
-            info = {};
-            info.parent = '/Mobius/' + drone_info.gcs + '/GCS_Data';
-            info.name = my_drone_name;
-            conf.cnt.push(JSON.parse(JSON.stringify(info)));
-
-            my_command_parent_name = info.parent;
-            my_command_name = my_command_parent_name + '/' + info.name;
-
-            MQTT_SUBSCRIPTION_ENABLE = 1;
-            sh_state = 'crtct';
-            setTimeout(http_watchdog, normal_interval);
-
-            drone_info.id = conf.ae.name;
-            // console.log(drone_info);
-            fs.writeFileSync('drone_info.json', JSON.stringify(drone_info, null, 4), 'utf8');
-
-            tas_mav = require('./thyme_tas_mav')
-
-            if (my_simul === 'on') {
-                mqtt_connect('127.0.0.1')
-            } else {
-                mqtt_connect(conf.cse.host)
-            }
-
-            callback();
-        } else {
-            console.log('x-m2m-rsc : ' + rsc + ' <----' + res_body);
-            setTimeout(http_watchdog, retry_interval);
-            callback();
+    if (my_simul === 'on') {
+        mqtt_connect('127.0.0.1');
+    } else {
+        mqtt_connect(conf.cse.host);
+    }
+    if (my_simul === 'on') {
+        if (mqtt_client !== null) {
+            let drone_info = {};
+            drone_info.drone_name = my_drone_name;
+            mqtt_client.publish(pub_start_init, my_drone_name);
         }
-    });
+    }
 }
 
 function http_watchdog() {
     if (sh_state === 'rtvct') {
-        retrieve_my_cnt_name(function () {
-
-        });
+        retrieve_my_cnt_name();
     } else if (sh_state === 'crtae') {
         console.log('[sh_state] : ' + sh_state);
         sh_adn.crtae(conf.ae.parent, conf.ae.name, conf.ae.appid, function (status, res_body) {
@@ -335,7 +276,9 @@ function http_watchdog() {
                 if (conf.sub.length <= count) {
                     sh_state = 'crtci';
 
-                    tas_mav.ready()
+                    if (my_simul === 'off') {
+                        tas_mav.ready()
+                    }
 
                     setTimeout(http_watchdog, normal_interval);
                 }
@@ -382,20 +325,25 @@ function mqtt_connect(serverip) {
             }
         }
 
-        mqtt_client = mqtt.connect(connectOptions)
+        mqtt_client = mqtt.connect(connectOptions);
 
         mqtt_client.on('connect', () => {
             console.log('mqtt is connected to ( ' + serverip + ' )')
 
             if (mobius_sub_rc_topic !== '') {
                 mqtt_client.subscribe(mobius_sub_rc_topic, () => {
-                    console.log('[mqtt] mobius_sub_rc_topic is subscribed: ' + mobius_sub_rc_topic)
-                })
+                    console.log('[mqtt] mobius_sub_rc_topic is subscribed: ' + mobius_sub_rc_topic);
+                });
             }
             if (my_command_name !== '') {
                 mqtt_client.subscribe(my_command_name, () => {
-                    console.log('[mqtt] my_command_name is subscribed: ' + my_command_name)
-                })
+                    console.log('[mqtt] my_command_name is subscribed: ' + my_command_name);
+                });
+            }
+            if (sub_sim_info_for_start !== '') {
+                mqtt_client.subscribe(sub_sim_info_for_start, () => {
+                    console.log('[mqtt] sub_sim_info_for_start is subscribed: ' + sub_sim_info_for_start);
+                });
             }
         })
 
@@ -404,15 +352,35 @@ function mqtt_connect(serverip) {
                 tas_mav.gcs_noti_handler(message.toString('hex'));
             } else if (topic === my_command_name) {
                 tas_mav.gcs_noti_handler(message.toString('hex'));
+            } else if (topic === sub_sim_info_for_start) {
+                let init_info = JSON.parse(message.toString());
+                console.log(init_info)
+                if (!started) {
+                    tas_mav.ready()
+
+                    console.log('sh start_sitl.sh ' + init_info.Lat + ' ' + init_info.Lon + ' ' + init_info.Alt + ' ' + init_info.Hdg);
+                    exec('sh start_sitl.sh ' + init_info.Lat + ' ' + init_info.Lon + ' ' + init_info.Alt + ' ' + init_info.Hdg, {cwd: process.cwd()}, (error, stdout, stderr) => {
+                        if (error) {
+                            console.log('error - ' + error);
+                        }
+                        if (stdout) {
+                            console.log('stdout - ' + stdout);
+                        }
+                        if (stderr) {
+                            console.log('stderr - ' + stderr);
+                        }
+                    });
+                    started = true;
+                }
             } else {
-                console.log('Received Message ' + message.toString('hex') + ' From ' + topic)
+                console.log('Received Message ' + message.toString('hex') + ' From ' + topic);
             }
         })
 
         mqtt_client.on('error', function (err) {
-            console.log('[mqtt] (error) ' + err.message)
-            mqtt_client = null
-            mqtt_connect(serverip)
+            console.log('[mqtt] (error) ' + err.message);
+            mqtt_client = null;
+            mqtt_connect(serverip);
         })
     }
 }

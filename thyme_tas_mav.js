@@ -2,16 +2,16 @@
  * Created by Wonseok Jung in KETI on 2022-12-27.
  */
 
-const moment = require('moment')
+const moment = require('moment');
 const dgram = require("dgram");
-const {SerialPort} = require('serialport')
-const mavlink = require('./mavlibrary/mavlink.js')
+const {SerialPort} = require('serialport');
+const mavlink = require('./mavlibrary/mavlink.js');
 
 let mavPortNum = '/dev/ttyAMA0';
 let mavBaudrate = '115200';
 let mavPort = null
 
-let mission_topic = '/Mobius/' + drone_info.gcs + '/Mission_Data/' + my_drone_name;
+let mission_topic = '/Mobius/' + my_gcs_name + '/Mission_Data/' + my_drone_name;
 
 let HOST = '127.0.0.1';
 let PORT1 = 14555; // output: SITL --> GCS
@@ -25,7 +25,7 @@ if (my_simul === 'on') {
 }
 
 exports.ready = function tas_ready() {
-    mavPortOpening()
+    mavPortOpening();
 }
 
 let control = {};
@@ -80,8 +80,8 @@ function mavlinkGenerateMessage(src_sys_id, src_comp_id, type, params) {
 }
 
 exports.gcs_noti_handler = function (message) {
-    // console.log('[GCS]', message)
-    var ver = message.substring(0, 2)
+    // console.log('[GCS]', message);
+    var ver = message.substring(0, 2);
     if (ver === 'ff') {
         // MAVLink로 변환된 조종 신호를 시뮬레이터 또는 FC에 전달
         let rc_data = message.toString('hex');
@@ -123,7 +123,7 @@ exports.gcs_noti_handler = function (message) {
                             }
                         );
                     } else {
-                        console.log('send cmd via sitlUDP2')
+                        console.log('send cmd via sitlUDP2');
                     }
                 } else { // FC에 전달
                     if (mavPort != null) {
@@ -167,8 +167,8 @@ exports.gcs_noti_handler = function (message) {
             } else {
                 if (mqtt_client !== null) {
                     mqtt_client.publish(mission_topic, mission_signal, () => {
-                        // console.log('publish ' + mission_signal.toString('hex') + ' to ' + mission_topic)
-                    })
+                        // console.log('publish ' + mission_signal.toString('hex') + ' to ' + mission_topic);
+                    });
                 }
             }
         } catch (ex) {
@@ -176,24 +176,22 @@ exports.gcs_noti_handler = function (message) {
         }
     } else {
         if (ver === 'fd') {
-            var msg_id = parseInt(message.substring(18, 20) + message.substring(16, 18) + message.substring(14, 16), 16)
-            var base_offset = 20
+            var msg_id = parseInt(message.substring(18, 20) + message.substring(16, 18) + message.substring(14, 16), 16);
+            var base_offset = 20;
         } else {
-            msg_id = parseInt(message.substring(10, 12).toLowerCase(), 16)
-            base_offset = 12
+            msg_id = parseInt(message.substring(10, 12).toLowerCase(), 16);
+            base_offset = 12;
         }
 
         if (sitlUDP2 != null) {
-            sitlUDP2.send(Buffer.from(message, 'hex'), 0, Buffer.from(message, 'hex').length, PORT2, HOST,
-                function (err) {
-                    if (err) {
-                        console.log('UDP message send error', err);
-                        return;
-                    }
+            sitlUDP2.send(Buffer.from(message, 'hex'), 0, Buffer.from(message, 'hex').length, PORT2, HOST, (err) => {
+                if (err) {
+                    console.log('UDP message send error', err);
+                    return;
                 }
-            );
+            });
         } else {
-            console.log('send cmd via sitlUDP2')
+            console.log('send cmd via sitlUDP2');
         }
     }
 }
@@ -217,18 +215,18 @@ function mavPortOpening() {
             mavPort = new SerialPort({
                 path: mavPortNum,
                 baudRate: parseInt(mavBaudrate, 10),
-            })
-            mavPort.on('open', mavPortOpen)
-            mavPort.on('close', mavPortClose)
-            mavPort.on('error', mavPortError)
-            mavPort.on('data', mavPortData)
+            });
+            mavPort.on('open', mavPortOpen);
+            mavPort.on('close', mavPortClose);
+            mavPort.on('error', mavPortError);
+            mavPort.on('data', mavPortData);
         } else {
             if (mavPort.isOpen) {
                 mavPort.close();
-                mavPort = null
+                mavPort = null;
                 setTimeout(mavPortOpening, 2000);
             } else {
-                mavPort.open()
+                mavPort.open();
             }
         }
     }
@@ -238,92 +236,92 @@ function mavPortOpen() {
     if (my_simul === 'on') {
         console.log('UDP socket connect to ' + sitlUDP.address().address + ':' + sitlUDP.address().port);
     } else {
-        console.log('mavPort(' + mavPort.path + '), mavPort rate: ' + mavPort.baudRate + ' open.')
+        console.log('mavPort(' + mavPort.path + '), mavPort rate: ' + mavPort.baudRate + ' open.');
     }
 }
 
 function mavPortClose() {
-    console.log('mavPort closed.')
+    console.log('mavPort closed.');
 
-    setTimeout(mavPortOpening, 2000)
+    setTimeout(mavPortOpening, 2000);
 }
 
 function mavPortError(error) {
-    console.log('[mavPort error]: ' + error.message)
+    console.log('[mavPort error]: ' + error.message);
 
-    setTimeout(mavPortOpening, 2000)
+    setTimeout(mavPortOpening, 2000);
 }
 
-var mavStrFromDrone = ''
-var mavStrFromDroneLength = 0
-var mavVersion = 'unknown'
-var mavVersionCheckFlag = false
+var mavStrFromDrone = '';
+var mavStrFromDroneLength = 0;
+var mavVersion = 'unknown';
+var mavVersionCheckFlag = false;
 
 function mavPortData(data) {
-    mavStrFromDrone += data.toString('hex').toLowerCase()
+    mavStrFromDrone += data.toString('hex').toLowerCase();
 
     while (mavStrFromDrone.length > 20) {
         if (!mavVersionCheckFlag) {
-            var stx = mavStrFromDrone.substring(0, 2)
+            var stx = mavStrFromDrone.substring(0, 2);
             if (stx === 'fe') {
-                var len = parseInt(mavStrFromDrone.substring(2, 4), 16)
-                var mavLength = (6 * 2) + (len * 2) + (2 * 2)
-                var sysid = parseInt(mavStrFromDrone.substring(6, 8), 16)
-                var msgid = parseInt(mavStrFromDrone.substring(10, 12), 16)
+                var len = parseInt(mavStrFromDrone.substring(2, 4), 16);
+                var mavLength = (6 * 2) + (len * 2) + (2 * 2);
+                var sysid = parseInt(mavStrFromDrone.substring(6, 8), 16);
+                var msgid = parseInt(mavStrFromDrone.substring(10, 12), 16);
 
                 if (msgid === 0 && len === 9) { // HEARTBEAT
-                    mavVersionCheckFlag = true
-                    mavVersion = 'v1'
+                    mavVersionCheckFlag = true;
+                    mavVersion = 'v1';
                 }
 
                 if ((mavStrFromDrone.length) >= mavLength) {
-                    var mavPacket = mavStrFromDrone.substring(0, mavLength)
+                    var mavPacket = mavStrFromDrone.substring(0, mavLength);
 
-                    mavStrFromDrone = mavStrFromDrone.substring(mavLength)
-                    mavStrFromDroneLength = 0
+                    mavStrFromDrone = mavStrFromDrone.substring(mavLength);
+                    mavStrFromDroneLength = 0;
                 } else {
-                    break
+                    break;
                 }
             } else if (stx === 'fd') {
-                len = parseInt(mavStrFromDrone.substring(2, 4), 16)
-                mavLength = (10 * 2) + (len * 2) + (2 * 2)
+                len = parseInt(mavStrFromDrone.substring(2, 4), 16);
+                mavLength = (10 * 2) + (len * 2) + (2 * 2);
 
-                sysid = parseInt(mavStrFromDrone.substring(10, 12), 16)
-                msgid = parseInt(mavStrFromDrone.substring(18, 20) + mavStrFromDrone.substring(16, 18) + mavStrFromDrone.substring(14, 16), 16)
+                sysid = parseInt(mavStrFromDrone.substring(10, 12), 16);
+                msgid = parseInt(mavStrFromDrone.substring(18, 20) + mavStrFromDrone.substring(16, 18) + mavStrFromDrone.substring(14, 16), 16);
 
                 if (msgid === 0 && len === 9) { // HEARTBEAT
-                    mavVersionCheckFlag = true
-                    mavVersion = 'v2'
+                    mavVersionCheckFlag = true;
+                    mavVersion = 'v2';
                 }
                 if (mavStrFromDrone.length >= mavLength) {
-                    mavPacket = mavStrFromDrone.substring(0, mavLength)
+                    mavPacket = mavStrFromDrone.substring(0, mavLength);
 
-                    mavStrFromDrone = mavStrFromDrone.substring(mavLength)
-                    mavStrFromDroneLength = 0
+                    mavStrFromDrone = mavStrFromDrone.substring(mavLength);
+                    mavStrFromDroneLength = 0;
                 } else {
-                    break
+                    break;
                 }
             } else {
-                mavStrFromDrone = mavStrFromDrone.substring(2)
+                mavStrFromDrone = mavStrFromDrone.substring(2);
             }
         } else {
-            stx = mavStrFromDrone.substring(0, 2)
+            stx = mavStrFromDrone.substring(0, 2);
             if (mavVersion === 'v1' && stx === 'fe') {
-                len = parseInt(mavStrFromDrone.substring(2, 4), 16)
-                mavLength = (6 * 2) + (len * 2) + (2 * 2)
+                len = parseInt(mavStrFromDrone.substring(2, 4), 16);
+                mavLength = (6 * 2) + (len * 2) + (2 * 2);
 
                 if ((mavStrFromDrone.length) >= mavLength) {
-                    mavPacket = mavStrFromDrone.substring(0, mavLength)
-                    // console.log('v1', mavPacket)
+                    mavPacket = mavStrFromDrone.substring(0, mavLength);
+                    // console.log('v1', mavPacket);
 
                     if (mqtt_client !== null) {
-                        mqtt_client.publish(my_cnt_name, Buffer.from(mavPacket, 'hex'))
+                        mqtt_client.publish(my_cnt_name, Buffer.from(mavPacket, 'hex'));
                     }
                     send_aggr_to_Mobius(my_cnt_name, mavPacket, 2000);
-                    setTimeout(parseMavFromDrone, 0, mavPacket)
+                    setTimeout(parseMavFromDrone, 0, mavPacket);
 
-                    mavStrFromDrone = mavStrFromDrone.substring(mavLength)
-                    mavStrFromDroneLength = 0
+                    mavStrFromDrone = mavStrFromDrone.substring(mavLength);
+                    mavStrFromDroneLength = 0;
                 } else {
                     break
                 }
@@ -411,6 +409,25 @@ function parseMavFromDrone(mavPacket) {
                 my_sortie_name = 'disarm'
                 my_cnt_name = my_parent_cnt_name + '/' + my_sortie_name;
             }
+        } else if (msg_id == mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT) { // #33
+            var time_boot_ms = mavPacket.substring(base_offset, base_offset + 8).toLowerCase();
+            base_offset += 8;
+            var lat = mavPacket.substring(base_offset, base_offset + 8).toLowerCase();
+            base_offset += 8;
+            var lon = mavPacket.substring(base_offset, base_offset + 8).toLowerCase();
+            base_offset += 8;
+            var alt = mavPacket.substring(base_offset, base_offset + 8).toLowerCase();
+            base_offset += 8;
+            var relative_alt = mavPacket.substring(base_offset, base_offset + 8).toLowerCase();
+
+            fc.global_position_int = {};
+            fc.global_position_int.lat = Buffer.from(lat, 'hex').readInt32LE(0);
+            fc.global_position_int.lon = Buffer.from(lon, 'hex').readInt32LE(0);
+            fc.global_position_int.alt = Buffer.from(alt, 'hex').readInt32LE(0);
+            fc.global_position_int.relative_alt = Buffer.from(relative_alt, 'hex').readInt32LE(0);
+            fc.global_position_int.drone_name = my_drone_name;
+
+            mqtt_client.publish(pub_start_init, JSON.stringify(fc.global_position_int))
         }
     } catch (e) {
         console.log('[parseMavFromDrone Error]', e)

@@ -1,9 +1,0 @@
-{
-    "host": "127.0.0.1",
-    "drone": "LVC_Drone",
-    "gcs": "KETI_LVC",
-    "type": "ardupilot",
-    "system_id": 254,
-    "simul": "on",
-    "id": "Dione"
-}
