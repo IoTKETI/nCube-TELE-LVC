@@ -359,8 +359,8 @@ function mqtt_connect(serverip) {
                 if (!started) {
                     tas_mav.ready()
                     // TODO: heading(Hdg) 값 필요함, dronelocation 무슨 값인지??
-                    console.log('sh start_sitl.sh ' + init_info.Lat + ' ' + init_info.Lon + ' ' + init_info.Alt + ' ' + init_info.Hdg);
-                    exec('sh start_sitl.sh ' + init_info.Lat + ' ' + init_info.Lon + ' ' + init_info.Alt + ' ' + init_info.Hdg, {cwd: process.cwd()}, (error, stdout, stderr) => {
+                    console.log('sh start_sitl.sh ' + init_info.dronelocation.Lat + ' ' + init_info.dronelocation.Lon + ' ' + init_info.dronelocation.Alt + ' ' + init_info.dronelocation.Hdg);
+                    exec('sh start_sitl.sh ' + init_info.dronelocation.Lat + ' ' + init_info.dronelocation.Lon + ' ' + init_info.dronelocation.Alt + ' ' + init_info.dronelocation.Hdg, {cwd: process.cwd()}, (error, stdout, stderr) => {
                         if (error) {
                             console.log('error - ' + error);
                         }
