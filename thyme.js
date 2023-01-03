@@ -84,7 +84,7 @@ function ready_mqtt_connect(serverip) {
                         my_simul = "on"
                     }
                     /*  "dronename": "LVC_Drone",
-                        "dronelocation": "37.40313329147436, 127.16083110569653, 0,0, 0",
+                        "dronelocation": "37.40313329147436, 127.16083110569653, 0.0, 0",
                         "Lat": 37.40313329147436,
                         "Lon": 127.16083110569653,
                         "Alt": 0,
