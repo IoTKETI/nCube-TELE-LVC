@@ -25,6 +25,9 @@ const normal_interval = 100;
 let sub_sim_info_for_start = '/LVC/start';
 global.pub_start_init = '/LVC/init';
 
+global.init_flag = false;
+let init_t = null;
+
 global.getType = function (p) {
     var type = 'string';
     if (Array.isArray(p)) {
@@ -175,7 +178,13 @@ function retrieve_my_cnt_name() {
         if (mqtt_client !== null) {
             let drone_info = {};
             drone_info.drone_name = my_drone_name;
-            mqtt_client.publish(pub_start_init, my_drone_name);
+            init_t = setInterval(() => {
+                if (!init_flag) {
+                    mqtt_client.publish(pub_start_init, JSON.stringify(drone_info));
+                } else {
+                    clearInterval(init_t)
+                }
+            }, 5 * 1000);
         }
     }
 }
@@ -208,7 +217,7 @@ function http_watchdog() {
         });
     } else if (sh_state === 'rtvae') {
         if (conf.ae.id === 'S') {
-            conf.ae.id = 'S' + shortid.generate();
+            conf.ae.id = 'S' + nanoid(9);
         }
 
         console.log('[sh_state] : ' + sh_state);
@@ -372,6 +381,7 @@ function mqtt_connect(serverip) {
                         }
                     });
                     started = true;
+                    init_flag = true;
                 }
             } else {
                 console.log('Received Message ' + message.toString('hex') + ' From ' + topic);
