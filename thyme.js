@@ -8,8 +8,11 @@ global.sh_adn = require('./http_adn');
 global.sh_state = 'rtvct';
 
 global.mqtt_client = null;
-
-global.started = false;
+if (my_simul === 'off') {
+    global.started = true;
+} else {
+    global.started = false;
+}
 
 setTimeout(() => {
     require('./tele_rf');
