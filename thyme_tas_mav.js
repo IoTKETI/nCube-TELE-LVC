@@ -206,7 +206,7 @@ function mavPortOpening() {
             sitlUDP.on('error', mavPortError);
         }
     } else {
-        mavPortNum = 'COM5';
+        mavPortNum = '/dev/ttyAMA0';
         mavBaudrate = '115200';
 
         if (mavPort === null) {
