@@ -7,19 +7,25 @@ const dgram = require("dgram");
 const {SerialPort} = require('serialport');
 const mavlink = require('./mavlibrary/mavlink.js');
 
+// FC TELE 연동용
+let mavPort = null;
 let mavPortNum = '/dev/ttyAMA0';
 let mavBaudrate = '115200';
-let mavPort = null;
 
-let rcPortNum = '/dev/ttyAMA1';
-let rcBaudrate = '115200';
+// TELE 데이터 수신용 (암복호모듈 연동)
+let rfPort = null;
+let rfPortNum = '/dev/ttyUSB0';
+let rfBaudrate = '115200';
+
+// RC 데이터 수신용 (암복호모듈 연동)
 let rcPort = null;
+let rcPortNum = '/dev/ttyAMA2';
+let rcBaudrate = '115200';
 
+// SBUS 모듈 연동용 (내부 Serial)
+let sbusPort = null;
 let sbusPortNum = '/dev/ttyAMA3';
 let sbusBaudrate = '115200';
-let sbusPort = null;
-
-rcPortOpening();
 
 let mission_topic = '/Mobius/' + my_gcs_name + '/Mission_Data/' + my_drone_name;
 
@@ -30,14 +36,16 @@ let PORT2 = 14556; // input : GCS --> SITL
 global.sitlUDP = null;
 global.sitlUDP2 = null;
 
-if (my_simul.toLowerCase() === 'on') {
-    sitlUDP2 = dgram.createSocket('udp4');
-}else if (my_simul.toLowerCase() === 'off') {
-    sbusPortOpening();
-}
+exports.ready = function tas_ready() {
+    rcPortOpening();
 
-    exports.ready = function tas_ready() {
     mavPortOpening();
+
+    if (my_simul.toLowerCase() === 'on') {
+        sitlUDP2 = dgram.createSocket('udp4');
+    } else if (my_simul.toLowerCase() === 'off') {
+        sbusPortOpening();
+    }
 }
 
 const RC_RATE = 0.64;
@@ -196,6 +204,8 @@ exports.gcs_noti_handler = function (message) {
                 }
             });
         } else {
+            sitlUDP2 = dgram.createSocket('udp4');
+
             console.log('send cmd via sitlUDP2');
         }
     }
@@ -319,8 +329,14 @@ function mavPortData(data) {
                     mavPacket = mavStrFromDrone.substring(0, mavLength);
                     // console.log('v1', mavPacket);
 
-                    if (mqtt_client !== null) {
-                        mqtt_client.publish(my_cnt_name, Buffer.from(mavPacket, 'hex'));
+                    if (my_simul.toLowerCase() === 'on') {
+                        if (mqtt_client !== null) {
+                            mqtt_client.publish(my_cnt_name, Buffer.from(mavPacket, 'hex'));
+                        }
+                    } else if (my_simul.toLowerCase() === 'off') {
+                        if (rfPort !== null) {
+                            rfPort.write(Buffer.from(mavPacket, 'hex'));
+                        }
                     }
                     send_aggr_to_Mobius(my_cnt_name, mavPacket, 2000);
                     setTimeout(parseMavFromDrone, 0, mavPacket);
@@ -338,8 +354,14 @@ function mavPortData(data) {
                     mavPacket = mavStrFromDrone.substring(0, mavLength);
                     // console.log('v2', mavPacket);
 
-                    if (mqtt_client !== null) {
-                        mqtt_client.publish(my_cnt_name, Buffer.from(mavPacket, 'hex'));
+                    if (my_simul.toLowerCase() === 'on') {
+                        if (mqtt_client !== null) {
+                            mqtt_client.publish(my_cnt_name, Buffer.from(mavPacket, 'hex'));
+                        }
+                    } else if (my_simul.toLowerCase() === 'off') {
+                        if (rfPort !== null) {
+                            rfPort.write(Buffer.from(mavPacket, 'hex'));
+                        }
                     }
                     send_aggr_to_Mobius(my_cnt_name, mavPacket, 2000);
                     setTimeout(parseMavFromDrone, 0, mavPacket);
@@ -444,11 +466,12 @@ function parseMavFromDrone(mavPacket) {
             fc.global_position_int.hdg = Buffer.from(hdg, 'hex').readUInt16LE(0);
             fc.global_position_int.drone_name = my_drone_name;
 
+            /* TODO: TELE-HUB로 이동
             if (my_simul.toLowerCase() === 'off') {
                 if (!init_flag) {  // TODO: 추후 실드론에서도 init_flag 값 변경하여 지속적으로 보내는 것 방지
                     mqtt_client.publish(pub_start_init, JSON.stringify(fc.global_position_int));
                 }
-            }
+            }*/
         }
     } catch (e) {
         console.log('[parseMavFromDrone Error]', msg_id + '\n' + e);
@@ -472,6 +495,51 @@ function send_aggr_to_Mobius(topic, content_each, gap) {
 
             delete aggr_content[topic];
         }, gap, topic);
+    }
+}
+
+function rfPortOpening() {
+    if (rfPort === null) {
+        rfPort = new SerialPort({
+            path: rfPortNum,
+            baudRate: parseInt(rfBaudrate, 10),
+        });
+        rfPort.on('open', rfPortOpen);
+        rfPort.on('close', rfPortClose);
+        rfPort.on('error', rfPortError);
+        rfPort.on('data', rfPortData);
+    } else {
+        if (rfPort.isOpen) {
+            rfPort.close();
+            rfPort = null;
+            setTimeout(rfPortOpening, 2000);
+        } else {
+            rfPort.open();
+        }
+    }
+}
+
+function rfPortOpen() {
+    console.log('rfPort(' + rfPort.path + '), rfPort rate: ' + rfPort.baudRate + ' open.');
+}
+
+function rfPortClose() {
+    console.log('rfPort closed.');
+
+    setTimeout(rfPortOpening, 2000);
+}
+
+function rfPortError(error) {
+    console.log('[rfPort error]: ' + error.message);
+
+    setTimeout(rfPortOpening, 2000);
+}
+
+function rfPortData(message) {
+    if (mavPort !== null) {
+        mavPort.write(message, () => {
+            console.log('Received FC command from GCS');
+        });
     }
 }
 
@@ -524,8 +592,9 @@ function rcPortData(message) {
             let rc_data = RCstrFromGCS.substring(0, RC_LENGTH);
             console.log('(Serial) receive rc data - ' + rc_data);
 
-            sbusPort.write(Buffer.from(rc_data));
-
+            if (sbusPort !== null) {
+                sbusPort.write(Buffer.from(rc_data));
+            }
             let mission_value = {};
             mission_value.target_system = my_sysid;
             mission_value.target_component = 1;
@@ -606,5 +675,7 @@ function sbusPortError(error) {
 function sbusPortData(message) {
     console.log('Received res from sbus module');
 
-    rcPort.write(message);
+    if (rcPort !== null) {
+        rcPort.write(message);
+    }
 }
