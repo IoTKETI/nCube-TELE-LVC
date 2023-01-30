@@ -9,7 +9,17 @@ const mavlink = require('./mavlibrary/mavlink.js');
 
 let mavPortNum = '/dev/ttyAMA0';
 let mavBaudrate = '115200';
-let mavPort = null
+let mavPort = null;
+
+let rcPortNum = '/dev/ttyAMA1';
+let rcBaudrate = '115200';
+let rcPort = null;
+
+let sbusPortNum = '/dev/ttyAMA3';
+let sbusBaudrate = '115200';
+let sbusPort = null;
+
+rcPortOpening();
 
 let mission_topic = '/Mobius/' + my_gcs_name + '/Mission_Data/' + my_drone_name;
 
@@ -20,11 +30,13 @@ let PORT2 = 14556; // input : GCS --> SITL
 global.sitlUDP = null;
 global.sitlUDP2 = null;
 
-if (my_simul === 'on') {
+if (my_simul.toLowerCase() === 'on') {
     sitlUDP2 = dgram.createSocket('udp4');
+}else if (my_simul.toLowerCase() === 'off') {
+    sbusPortOpening();
 }
 
-exports.ready = function tas_ready() {
+    exports.ready = function tas_ready() {
     mavPortOpening();
 }
 
@@ -60,8 +72,8 @@ function mavlinkGenerateMessage(src_sys_id, src_comp_id, type, params) {
                     params.ch14_raw,
                     params.ch15_raw,
                     params.ch16_raw,
-                    params.ch17_raw,
-                    params.ch18_raw,
+                    // params.ch17_raw,
+                    // params.ch18_raw,
                 );
                 break;
         }
@@ -83,6 +95,7 @@ exports.gcs_noti_handler = function (message) {
     if (ver === 'ff') {
         // MAVLink로 변환된 조종 신호를 시뮬레이터 또는 FC에 전달
         let rc_data = message.toString('hex');
+        console.log('(MQTT) receive rc data - ' + rc_data);
         let rc_value = {};
         rc_value.target_system = my_sysid;
         rc_value.target_component = 1;
@@ -90,7 +103,7 @@ exports.gcs_noti_handler = function (message) {
         rc_value.ch2_raw = SBUS2RC(parseInt(rc_data.substring(4, 6), 16));
         rc_value.ch3_raw = SBUS2RC(parseInt(rc_data.substring(6, 8), 16));
         rc_value.ch4_raw = SBUS2RC(parseInt(rc_data.substring(8, 10), 16));
-        rc_value.ch5_raw = SBUS2RC(parseInt(rc_data.substring(10, 12), 16)) - 3;
+        rc_value.ch5_raw = SBUS2RC(parseInt(rc_data.substring(10, 12), 16));
         rc_value.ch6_raw = SBUS2RC(parseInt(rc_data.substring(12, 14), 16));
         rc_value.ch7_raw = SBUS2RC(parseInt(rc_data.substring(14, 16), 16));
         rc_value.ch8_raw = SBUS2RC(parseInt(rc_data.substring(16, 18), 16));
@@ -102,33 +115,27 @@ exports.gcs_noti_handler = function (message) {
         rc_value.ch14_raw = SBUS2RC(parseInt(rc_data.substring(28, 30), 16));
         rc_value.ch15_raw = SBUS2RC(parseInt(rc_data.substring(30, 32), 16));
         rc_value.ch16_raw = SBUS2RC(parseInt(rc_data.substring(32, 34), 16));
-        rc_value.ch17_raw = SBUS2RC(parseInt(rc_data.substring(34, 36), 16));
-        rc_value.ch18_raw = SBUS2RC(parseInt(rc_data.substring(36, 38), 16));
+        // rc_value.ch17_raw = SBUS2RC(parseInt(rc_data.substring(34, 36), 16));
+        // rc_value.ch18_raw = SBUS2RC(parseInt(rc_data.substring(36, 38), 16));
 
         try {
             let rc_signal = mavlinkGenerateMessage(255, 0xbe, mavlink.MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE, rc_value);
             if (rc_signal == null) {
                 console.log("mavlink message is null");
             } else {
-                if (my_simul === 'on') { // SITL에 전달
-                    if (sitlUDP2 != null) {
-                        sitlUDP2.send(rc_signal, 0, rc_signal.length, PORT2, HOST,
-                            function (err) {
-                                if (err) {
-                                    console.log('UDP message send error', err);
-                                    return;
-                                }
+                if (sitlUDP2 != null) {
+                    sitlUDP2.send(rc_signal, 0, rc_signal.length, PORT2, HOST,
+                        function (err) {
+                            if (err) {
+                                console.log('UDP message send error', err);
+                                return;
                             }
-                        );
-                    } else {
-                        console.log('send cmd via sitlUDP2');
-                    }
-                } else { // FC에 전달
-                    if (mavPort != null) {
-                        if (mavPort.isOpen) {
-                            mavPort.write(rc_signal);
                         }
-                    }
+                    );
+                } else {
+                    sitlUDP2 = dgram.createSocket('udp4');
+
+                    console.log('send cmd via sitlUDP2');
                 }
             }
         } catch (ex) {
@@ -155,8 +162,8 @@ exports.gcs_noti_handler = function (message) {
         mission_value.ch14_raw = SBUS2RC(parseInt(mission_data.substring(60, 62), 16));
         mission_value.ch15_raw = SBUS2RC(parseInt(mission_data.substring(62, 64), 16));
         mission_value.ch16_raw = SBUS2RC(parseInt(mission_data.substring(64, 66), 16));
-        mission_value.ch17_raw = SBUS2RC(parseInt(mission_data.substring(66, 68), 16));
-        mission_value.ch18_raw = SBUS2RC(parseInt(mission_data.substring(68, 70), 16));
+        // mission_value.ch17_raw = SBUS2RC(parseInt(mission_data.substring(66, 68), 16));
+        // mission_value.ch18_raw = SBUS2RC(parseInt(mission_data.substring(68, 70), 16));
 
         try {
             let mission_signal = mavlinkGenerateMessage(255, 0xbe, mavlink.MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE, mission_value);
@@ -195,7 +202,7 @@ exports.gcs_noti_handler = function (message) {
 }
 
 function mavPortOpening() {
-    if (my_simul === 'on') {
+    if (my_simul.toLowerCase() === 'on') {
         if (sitlUDP === null) {
             sitlUDP = dgram.createSocket('udp4');
             sitlUDP.bind(PORT1, HOST);
@@ -231,7 +238,7 @@ function mavPortOpening() {
 }
 
 function mavPortOpen() {
-    if (my_simul === 'on') {
+    if (my_simul.toLowerCase() === 'on') {
         console.log('UDP socket connect to ' + sitlUDP.address().address + ':' + sitlUDP.address().port);
     } else {
         console.log('mavPort(' + mavPort.path + '), mavPort rate: ' + mavPort.baudRate + ' open.');
@@ -417,16 +424,28 @@ function parseMavFromDrone(mavPacket) {
             var alt = mavPacket.substring(base_offset, base_offset + 8).toLowerCase();
             base_offset += 8;
             var relative_alt = mavPacket.substring(base_offset, base_offset + 8).toLowerCase();
+            base_offset += 8;
+            var vx = mavPacket.substring(base_offset, base_offset + 8).toLowerCase();
+            base_offset += 4;
+            var vy = mavPacket.substring(base_offset, base_offset + 8).toLowerCase();
+            base_offset += 4;
+            var vz = mavPacket.substring(base_offset, base_offset + 8).toLowerCase();
+            base_offset += 4;
+            var hdg = mavPacket.substring(base_offset, base_offset + 8).toLowerCase();
 
             fc.global_position_int = {};
             fc.global_position_int.lat = Buffer.from(lat, 'hex').readInt32LE(0);
             fc.global_position_int.lon = Buffer.from(lon, 'hex').readInt32LE(0);
             fc.global_position_int.alt = Buffer.from(alt, 'hex').readInt32LE(0);
             fc.global_position_int.relative_alt = Buffer.from(relative_alt, 'hex').readInt32LE(0);
+            // fc.global_position_int.vx = Buffer.from(vx, 'hex').readInt16LE(0);
+            // fc.global_position_int.vy = Buffer.from(vy, 'hex').readInt16LE(0);
+            // fc.global_position_int.vz = Buffer.from(vz, 'hex').readInt16LE(0);
+            fc.global_position_int.hdg = Buffer.from(hdg, 'hex').readUInt16LE(0);
             fc.global_position_int.drone_name = my_drone_name;
 
-            if (my_simul === 'off') {
-                if (!init_flag) {
+            if (my_simul.toLowerCase() === 'off') {
+                if (!init_flag) {  // TODO: 추후 실드론에서도 init_flag 값 변경하여 지속적으로 보내는 것 방지
                     mqtt_client.publish(pub_start_init, JSON.stringify(fc.global_position_int));
                 }
             }
@@ -454,4 +473,138 @@ function send_aggr_to_Mobius(topic, content_each, gap) {
             delete aggr_content[topic];
         }, gap, topic);
     }
+}
+
+function rcPortOpening() {
+    if (rcPort === null) {
+        rcPort = new SerialPort({
+            path: rcPortNum,
+            baudRate: parseInt(rcBaudrate, 10),
+        });
+        rcPort.on('open', rcPortOpen);
+        rcPort.on('close', rcPortClose);
+        rcPort.on('error', rcPortError);
+        rcPort.on('data', rcPortData);
+    } else {
+        if (rcPort.isOpen) {
+            rcPort.close();
+            rcPort = null;
+            setTimeout(rcPortOpening, 2000);
+        } else {
+            rcPort.open();
+        }
+    }
+}
+
+function rcPortOpen() {
+    console.log('rcPort(' + rcPort.path + '), rcPort rate: ' + rcPort.baudRate + ' open.');
+}
+
+function rcPortClose() {
+    console.log('rcPort closed.');
+
+    setTimeout(rcPortOpening, 2000);
+}
+
+function rcPortError(error) {
+    console.log('[rcPort error]: ' + error.message);
+
+    setTimeout(rcPortOpening, 2000);
+}
+
+const RC_LENGTH = 68;
+let RCstrFromGCS = '';
+
+function rcPortData(message) {
+    RCstrFromGCS += message.toString('hex').toLowerCase();
+
+    while (RCstrFromGCS.length >= RC_LENGTH) {
+        let header1 = RCstrFromGCS.substring(0, 2);
+        if (header1 === 'ff') {
+            let rc_data = RCstrFromGCS.substring(0, RC_LENGTH);
+            console.log('(Serial) receive rc data - ' + rc_data);
+
+            sbusPort.write(Buffer.from(rc_data));
+
+            let mission_value = {};
+            mission_value.target_system = my_sysid;
+            mission_value.target_component = 1;
+            mission_value.ch1_raw = SBUS2RC(parseInt(rc_data.substring(34, 36), 16));
+            mission_value.ch2_raw = SBUS2RC(parseInt(rc_data.substring(36, 38), 16));
+            mission_value.ch3_raw = SBUS2RC(parseInt(rc_data.substring(38, 40), 16));
+            mission_value.ch4_raw = SBUS2RC(parseInt(rc_data.substring(40, 42), 16));
+            mission_value.ch5_raw = SBUS2RC(parseInt(rc_data.substring(42, 44), 16));
+            mission_value.ch6_raw = SBUS2RC(parseInt(rc_data.substring(44, 46), 16));
+            mission_value.ch7_raw = SBUS2RC(parseInt(rc_data.substring(46, 48), 16));
+            mission_value.ch8_raw = SBUS2RC(parseInt(rc_data.substring(48, 50), 16));
+            mission_value.ch9_raw = SBUS2RC(parseInt(rc_data.substring(50, 52), 16));
+            mission_value.ch10_raw = SBUS2RC(parseInt(rc_data.substring(52, 54), 16));
+            mission_value.ch11_raw = SBUS2RC(parseInt(rc_data.substring(54, 56), 16));
+            mission_value.ch12_raw = SBUS2RC(parseInt(rc_data.substring(56, 58), 16));
+            mission_value.ch13_raw = SBUS2RC(parseInt(rc_data.substring(58, 60), 16));
+            mission_value.ch14_raw = SBUS2RC(parseInt(rc_data.substring(60, 62), 16));
+            mission_value.ch15_raw = SBUS2RC(parseInt(rc_data.substring(62, 64), 16));
+            mission_value.ch16_raw = SBUS2RC(parseInt(rc_data.substring(64, 66), 16));
+            // mission_value.ch17_raw = SBUS2RC(parseInt(mission_data.substring(66, 68), 16));
+            // mission_value.ch18_raw = SBUS2RC(parseInt(mission_data.substring(68, 70), 16));
+
+            try {
+                let mission_signal = mavlinkGenerateMessage(255, 0xbe, mavlink.MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE, mission_value);
+                if (mission_signal == null) {
+                    console.log("mavlink message is null");
+                } else {
+                    if (rcPort !== null) {
+                        rcPort.write(mission_signal, () => {
+                            console.log('write rcPort ' + mission_signal.toString('hex'));
+                        });
+                    }
+                }
+            } catch (ex) {
+                console.log('[ERROR] ' + ex);
+            }
+        }
+    }
+}
+
+function sbusPortOpening() {
+    if (sbusPort === null) {
+        sbusPort = new SerialPort({
+            path: sbusPortNum,
+            baudRate: parseInt(sbusBaudrate, 10),
+        });
+        sbusPort.on('open', sbusPortOpen);
+        sbusPort.on('close', sbusPortClose);
+        sbusPort.on('error', sbusPortError);
+        sbusPort.on('data', sbusPortData);
+    } else {
+        if (sbusPort.isOpen) {
+            sbusPort.close();
+            sbusPort = null;
+            setTimeout(sbusPortOpening, 2000);
+        } else {
+            sbusPort.open();
+        }
+    }
+}
+
+function sbusPortOpen() {
+    console.log('sbusPort(' + sbusPort.path + '), sbusPort rate: ' + sbusPort.baudRate + ' open.');
+}
+
+function sbusPortClose() {
+    console.log('sbusPort closed.');
+
+    setTimeout(sbusPortOpening, 2000);
+}
+
+function sbusPortError(error) {
+    console.log('[sbusPort error]: ' + error.message);
+
+    setTimeout(sbusPortOpening, 2000);
+}
+
+function sbusPortData(message) {
+    console.log('Received res from sbus module');
+
+    rcPort.write(message);
 }

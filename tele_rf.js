@@ -169,12 +169,9 @@ function retrieve_my_cnt_name() {
 
     tas_mav = require('./thyme_tas_mav');
 
-    if (my_simul === 'on') {
-        mqtt_connect('127.0.0.1');
-    } else {
-        mqtt_connect(conf.cse.host);
-    }
-    if (my_simul === 'on') {
+    mqtt_connect('127.0.0.1');
+
+    if (my_simul.toLowerCase() === 'on') {
         if (mqtt_client !== null) {
             let drone_info = {};
             drone_info.drone_name = my_drone_name;
@@ -285,7 +282,7 @@ function http_watchdog() {
                 if (conf.sub.length <= count) {
                     sh_state = 'crtci';
 
-                    if (my_simul === 'off') {
+                    if (my_simul.toLowerCase() === 'off') {
                         tas_mav.ready()
                     }
 
