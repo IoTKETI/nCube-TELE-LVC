@@ -40,10 +40,8 @@ exports.ready = function tas_ready() {
     mavPortOpening();
 
     if (my_simul.toLowerCase() === 'on') {
-        console.log("==============================\n\t Using SITL \t\t\n==============================");
         sitlUDP2 = dgram.createSocket('udp4');
     } else if (my_simul.toLowerCase() === 'off') {
-        console.log("====================================\n\t Using real drone \t\t\n====================================");
         sbusPortOpening();
         rcPortOpening();
         rfPortOpening();
