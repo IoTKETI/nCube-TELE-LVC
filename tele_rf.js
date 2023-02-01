@@ -285,6 +285,8 @@ function http_watchdog() {
                     if (my_simul.toLowerCase() === 'off') {
                         console.log("====================================\n\t Using real drone \t\t\n====================================");
                         tas_mav.ready()
+                    } else {
+                        console.log("==============================\n\t Using SITL \t\t\n==============================");
                     }
 
                     setTimeout(http_watchdog, normal_interval);
@@ -364,7 +366,6 @@ function mqtt_connect(serverip) {
                 let init_info = JSON.parse(message.toString());
                 console.log(init_info)
                 if (!started) {
-                    console.log("==============================\n\t Using SITL \t\t\n==============================");
                     tas_mav.ready()
                     // TODO: heading(Hdg) 값 필요함, dronelocation 무슨 값인지??
                     console.log('sh start_sitl.sh ' + init_info.dronelocation.Lat + ' ' + init_info.dronelocation.Lon + ' ' + init_info.dronelocation.Alt + ' ' + init_info.dronelocation.Hdg);
