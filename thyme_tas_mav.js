@@ -44,6 +44,7 @@ exports.ready = function tas_ready() {
     } else if (my_simul.toLowerCase() === 'off') {
         sbusPortOpening();
         rcPortOpening();
+        rfPortOpening();
     }
 }
 
