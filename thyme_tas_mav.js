@@ -102,7 +102,7 @@ exports.gcs_noti_handler = function (message) {
     if (ver === 'ff') {
         // MAVLink로 변환된 조종 신호를 시뮬레이터 또는 FC에 전달
         let rc_data = message.toString('hex');
-        console.log('(MQTT) receive rc data - ' + rc_data);
+        // console.log('(MQTT) receive rc data - ' + rc_data);
         let rc_value = {};
         rc_value.target_system = my_sysid;
         rc_value.target_component = 1;
@@ -122,8 +122,6 @@ exports.gcs_noti_handler = function (message) {
         rc_value.ch14_raw = SBUS2RC(parseInt(rc_data.substring(28, 30), 16));
         rc_value.ch15_raw = SBUS2RC(parseInt(rc_data.substring(30, 32), 16));
         rc_value.ch16_raw = SBUS2RC(parseInt(rc_data.substring(32, 34), 16));
-        // rc_value.ch17_raw = SBUS2RC(parseInt(rc_data.substring(34, 36), 16));
-        // rc_value.ch18_raw = SBUS2RC(parseInt(rc_data.substring(36, 38), 16));
 
         try {
             let rc_signal = mavlinkGenerateMessage(255, 0xbe, mavlink.MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE, rc_value);
@@ -170,6 +168,7 @@ exports.gcs_noti_handler = function (message) {
         mission_value.ch14_raw = SBUS2RC(parseInt(rc_data.substring(60, 62), 16));   // CH 30
         mission_value.ch15_raw = SBUS2RC(parseInt(rc_data.substring(62, 64), 16));   // CH 31
         mission_value.ch16_raw = SBUS2RC(parseInt(rc_data.substring(64, 66), 16));   // CH 32
+        console.log(mission_value);
 
         try {
             let mission_signal = mavlinkGenerateMessage(255, 0xbe, mavlink.MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE, mission_value);
