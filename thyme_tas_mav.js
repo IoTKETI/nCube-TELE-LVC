@@ -37,14 +37,13 @@ global.sitlUDP = null;
 global.sitlUDP2 = null;
 
 exports.ready = function tas_ready() {
-    rcPortOpening();
-
     mavPortOpening();
 
     if (my_simul.toLowerCase() === 'on') {
         sitlUDP2 = dgram.createSocket('udp4');
     } else if (my_simul.toLowerCase() === 'off') {
         sbusPortOpening();
+        rcPortOpening();
     }
 }
 
