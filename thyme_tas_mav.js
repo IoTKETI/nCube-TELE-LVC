@@ -150,7 +150,6 @@ exports.gcs_noti_handler = function (message) {
             console.log('[ERROR] ' + ex);
         }
 
-        let mission_data = message.toString('hex');
         let mission_value = {};
         mission_value.target_system = my_sysid;
         mission_value.target_component = 1;
