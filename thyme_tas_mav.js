@@ -14,7 +14,7 @@ let mavBaudrate = '115200';
 
 // TELE 데이터 수신용 (암복호모듈 연동)
 let rfPort = null;
-let rfPortNum = '/dev/ttyUSB0';
+let rfPortNum = '/dev/ttyAMA1';
 let rfBaudrate = '115200';
 
 // RC 데이터 수신용 (암복호모듈 연동)
