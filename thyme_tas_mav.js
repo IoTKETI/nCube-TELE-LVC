@@ -14,7 +14,7 @@ let mavBaudrate = '115200';
 
 // TELE 데이터 수신용 (암복호모듈 연동)
 let rfPort = null;
-let rfPortNum = '/dev/ttyAMA1';
+let rfPortNum = '/dev/ttyUSB0';
 let rfBaudrate = '115200';
 
 // RC 데이터 수신용 (암복호모듈 연동)
@@ -535,7 +535,7 @@ function rfPortError(error) {
 function rfPortData(message) {
     if (mavPort !== null) {
         mavPort.write(message, () => {
-            console.log('Received FC command from GCS');
+            console.log('Received FC command( '+ message.toString('hex') +' ) from GCS');
         });
     }
 }
