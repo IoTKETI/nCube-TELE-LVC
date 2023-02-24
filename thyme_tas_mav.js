@@ -14,7 +14,7 @@ let mavBaudrate = '115200';
 
 // TELE 데이터 수신용 (암복호모듈 연동)
 let rfPort = null;
-let rfPortNum = '/dev/ttyUSB0';
+let rfPortNum = '/dev/ttyAMA1';
 let rfBaudrate = '115200';
 
 // RC 데이터 수신용 (암복호모듈 연동)
@@ -590,7 +590,9 @@ function rcPortData(message) {
             console.log('(Serial) receive rc data - ' + rc_data);
 
             if (sbusPort !== null) {
-                sbusPort.write(Buffer.from(rc_data));
+                sbusPort.write(Buffer.from(rc_data), () => {
+                    console.log('send RC data to SBUS module');
+                });
             }
             let mission_value = {};
             mission_value.target_system = my_sysid;
@@ -669,7 +671,7 @@ function sbusPortError(error) {
 }
 
 function sbusPortData(message) {
-    console.log('Received res from sbus module');
+    // console.log('Received res from sbus module');
 
     if (rcPort !== null) {
         rcPort.write(message);
