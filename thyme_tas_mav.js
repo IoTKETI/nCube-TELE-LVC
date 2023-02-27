@@ -463,13 +463,6 @@ function parseMavFromDrone(mavPacket) {
             // fc.global_position_int.vz = Buffer.from(vz, 'hex').readInt16LE(0);
             fc.global_position_int.hdg = Buffer.from(hdg, 'hex').readUInt16LE(0);
             fc.global_position_int.drone_name = my_drone_name;
-
-            /* TODO: TELE-HUB로 이동
-            if (my_simul.toLowerCase() === 'off') {
-                if (!init_flag) {  // TODO: 추후 실드론에서도 init_flag 값 변경하여 지속적으로 보내는 것 방지
-                    mqtt_client.publish(pub_start_init, JSON.stringify(fc.global_position_int));
-                }
-            }*/
         }
     } catch (e) {
         console.log('[parseMavFromDrone Error]', msg_id + '\n' + e);
@@ -536,7 +529,7 @@ function rfPortError(error) {
 function rfPortData(message) {
     if (mavPort !== null) {
         mavPort.write(message, () => {
-            console.log('Received FC command( '+ message.toString('hex') +' ) from GCS');
+            console.log('Received FC command( ' + message.toString('hex') + ' ) from GCS');
         });
     }
 }

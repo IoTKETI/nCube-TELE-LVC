@@ -362,12 +362,10 @@ function mqtt_connect(serverip) {
             } else if (topic === my_command_name) {
                 tas_mav.gcs_noti_handler(message.toString('hex'));
             } else if (topic === sub_sim_info_for_start) {
-                // TODO: 버퍼에 감싸서 보내는지, JSON 그대로 보내는지
                 let init_info = JSON.parse(message.toString());
                 console.log(init_info)
                 if (!started) {
                     tas_mav.ready()
-                    // TODO: heading(Hdg) 값 필요함, dronelocation 무슨 값인지??
                     console.log('sh start_sitl.sh ' + init_info.dronelocation.Lat + ' ' + init_info.dronelocation.Lon + ' ' + init_info.dronelocation.Alt + ' ' + init_info.dronelocation.Hdg);
                     exec('sh start_sitl.sh ' + init_info.dronelocation.Lat + ' ' + init_info.dronelocation.Lon + ' ' + init_info.dronelocation.Alt + ' ' + init_info.dronelocation.Hdg, {cwd: process.cwd()}, (error, stdout, stderr) => {
                         if (error) {
