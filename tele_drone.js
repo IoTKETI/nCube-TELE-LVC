@@ -668,6 +668,8 @@ function sbusPortData(message) {
     // console.log('Received res from sbus module');
 
     if (rcPort !== null) {
-        rcPort.write(message);
+        rcPort.write(message, () => {
+            console.log("send res to RC");
+        });
     }
 }

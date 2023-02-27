@@ -166,7 +166,7 @@ function retrieve_my_cnt_name() {
     MQTT_SUBSCRIPTION_ENABLE = 1;
     setTimeout(http_watchdog, normal_interval);
 
-    tas_mav = require('./thyme_tas_mav');
+    tas_mav = require('./tele_drone');
 
     mqtt_connect('127.0.0.1');
 
