@@ -583,9 +583,10 @@ function rcPortData(message) {
             let rc_data = RCstrFromGCS.substring(0, RC_LENGTH);
             // console.log('(Serial) receive rc data - ' + rc_data);
 
-            console.log(sbusPort)
             if (sbusPort !== null) {
-                sbusPort.write(message, () => {
+                console.log('ready to send');
+
+                sbusPort.write(Buffer.from(rc_data, 'hex'), () => {
                     console.log('send RC data to SBUS module');
                 });
             }
