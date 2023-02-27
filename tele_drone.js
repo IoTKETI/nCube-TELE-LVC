@@ -596,41 +596,41 @@ function rcPortData(message) {
                 });
             }
 
-            let mission_value = {};
-            mission_value.target_system = my_sysid;
-            mission_value.target_component = 1;
-            mission_value.ch1_raw = SBUS2RC(parseInt(rc_data.substring(36, 38), 16));   // CH 18 - Tilt
-            mission_value.ch2_raw = SBUS2RC(parseInt(rc_data.substring(34, 36), 16));   // CH 17 - Pan
-            mission_value.ch3_raw = SBUS2RC(parseInt(rc_data.substring(38, 40), 16));   // CH 19 - Zoom
-            mission_value.ch4_raw = SBUS2RC(parseInt(rc_data.substring(54, 56), 16));   // CH 27 - Gun
-            // mission_value.ch4_raw = SBUS2RC(parseInt(rc_data.substring(40, 42), 16));   // CH 20
-            mission_value.ch5_raw = SBUS2RC(parseInt(rc_data.substring(12, 14), 16));   // CH 6 - Drop
-            mission_value.ch6_raw = SBUS2RC(parseInt(rc_data.substring(42, 44), 16));   // CH 21 - Camera direction
-            mission_value.ch7_raw = SBUS2RC(parseInt(rc_data.substring(44, 46), 16));   // CH 22 - camera mode
-            mission_value.ch8_raw = SBUS2RC(parseInt(rc_data.substring(46, 48), 16));   // CH 23 - sub
-            mission_value.ch9_raw = SBUS2RC(parseInt(rc_data.substring(48, 50), 16));   // CH 24
-            mission_value.ch10_raw = SBUS2RC(parseInt(rc_data.substring(50, 52), 16));   // CH 25
-            mission_value.ch11_raw = SBUS2RC(parseInt(rc_data.substring(52, 54), 16));   // CH 26
-            mission_value.ch12_raw = SBUS2RC(parseInt(rc_data.substring(56, 58), 16));   // CH 28
-            mission_value.ch13_raw = SBUS2RC(parseInt(rc_data.substring(58, 60), 16));   // CH 29
-            mission_value.ch14_raw = SBUS2RC(parseInt(rc_data.substring(60, 62), 16));   // CH 30
-            mission_value.ch15_raw = SBUS2RC(parseInt(rc_data.substring(62, 64), 16));   // CH 31
-            mission_value.ch16_raw = SBUS2RC(parseInt(rc_data.substring(64, 66), 16));   // CH 32
-
-            try {
-                let mission_signal = mavlinkGenerateMessage(255, 0xbe, mavlink.MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE, mission_value);
-                if (mission_signal == null) {
-                    console.log("mavlink message is null");
-                } else {
-                    if (rcPort !== null) {
-                        rcPort.write(mission_signal, () => {
-                            console.log('write rcPort ' + mission_signal.toString('hex'));
-                        });
-                    }
-                }
-            } catch (ex) {
-                console.log('[ERROR] ' + ex);
-            }
+            // let mission_value = {};
+            // mission_value.target_system = my_sysid;
+            // mission_value.target_component = 1;
+            // mission_value.ch1_raw = SBUS2RC(parseInt(rc_data.substring(36, 38), 16));   // CH 18 - Tilt
+            // mission_value.ch2_raw = SBUS2RC(parseInt(rc_data.substring(34, 36), 16));   // CH 17 - Pan
+            // mission_value.ch3_raw = SBUS2RC(parseInt(rc_data.substring(38, 40), 16));   // CH 19 - Zoom
+            // mission_value.ch4_raw = SBUS2RC(parseInt(rc_data.substring(54, 56), 16));   // CH 27 - Gun
+            // // mission_value.ch4_raw = SBUS2RC(parseInt(rc_data.substring(40, 42), 16));   // CH 20
+            // mission_value.ch5_raw = SBUS2RC(parseInt(rc_data.substring(12, 14), 16));   // CH 6 - Drop
+            // mission_value.ch6_raw = SBUS2RC(parseInt(rc_data.substring(42, 44), 16));   // CH 21 - Camera direction
+            // mission_value.ch7_raw = SBUS2RC(parseInt(rc_data.substring(44, 46), 16));   // CH 22 - camera mode
+            // mission_value.ch8_raw = SBUS2RC(parseInt(rc_data.substring(46, 48), 16));   // CH 23 - sub
+            // mission_value.ch9_raw = SBUS2RC(parseInt(rc_data.substring(48, 50), 16));   // CH 24
+            // mission_value.ch10_raw = SBUS2RC(parseInt(rc_data.substring(50, 52), 16));   // CH 25
+            // mission_value.ch11_raw = SBUS2RC(parseInt(rc_data.substring(52, 54), 16));   // CH 26
+            // mission_value.ch12_raw = SBUS2RC(parseInt(rc_data.substring(56, 58), 16));   // CH 28
+            // mission_value.ch13_raw = SBUS2RC(parseInt(rc_data.substring(58, 60), 16));   // CH 29
+            // mission_value.ch14_raw = SBUS2RC(parseInt(rc_data.substring(60, 62), 16));   // CH 30
+            // mission_value.ch15_raw = SBUS2RC(parseInt(rc_data.substring(62, 64), 16));   // CH 31
+            // mission_value.ch16_raw = SBUS2RC(parseInt(rc_data.substring(64, 66), 16));   // CH 32
+            //
+            // try {
+            //     let mission_signal = mavlinkGenerateMessage(255, 0xbe, mavlink.MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE, mission_value);
+            //     if (mission_signal == null) {
+            //         console.log("mavlink message is null");
+            //     } else {
+            //         if (rcPort !== null) {
+            //             rcPort.write(mission_signal, () => {
+            //                 console.log('write rcPort ' + mission_signal.toString('hex'));
+            //             });
+            //         }
+            //     }
+            // } catch (ex) {
+            //     console.log('[ERROR] ' + ex);
+            // }
         }
     }
 }
