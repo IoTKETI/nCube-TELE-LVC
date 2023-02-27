@@ -348,7 +348,7 @@ function mavPortData(data) {
 
                 if (mavStrFromDrone.length >= mavLength) {
                     mavPacket = mavStrFromDrone.substring(0, mavLength);
-                    console.log('v2', mavPacket);
+                    // console.log('v2', mavPacket);
 
                     if (my_simul.toLowerCase() === 'on') {
                         if (mqtt_client !== null) {
@@ -358,7 +358,7 @@ function mavPortData(data) {
                     } else if (my_simul.toLowerCase() === 'off') {
                         if (rfPort !== null) {
                             rfPort.write(Buffer.from(mavPacket, 'hex'), () => {
-                                console.log(mavPacket);
+                                // console.log(mavPacket);
                             });
                         }
                     }
