@@ -527,7 +527,6 @@ function rfPortError(error) {
 }
 
 function rfPortData(message) {
-    // TODO: GCS_Data에 업로드 하도록 수정
     if (mavPort !== null) {
         mavPort.write(message, () => {
             // console.log('Received FC command( ' + message.toString('hex') + ' ) from GCS');
