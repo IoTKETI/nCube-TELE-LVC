@@ -582,19 +582,19 @@ function rcPortData(message) {
     console.log('rcPortData ', message.toString('hex'));
     RCstrFromGCS += message.toString('hex').toLowerCase();
 
-    while (RCstrFromGCS.length >= RC_LENGTH) {
-        let header1 = RCstrFromGCS.substring(0, 2);
-        if (header1 === 'ff') {
-            let rc_data = RCstrFromGCS.substring(0, RC_LENGTH);
-            // console.log('(Serial) receive rc data - ' + rc_data);
-
-            if (sbusPort !== null) {
-                // console.log('ready to send');
-
-                sbusPort.write(Buffer.from(rc_data, 'hex'), () => {
-                    console.log('write to sbusPort ' + rc_data);
-                });
-            }
+    // while (RCstrFromGCS.length >= RC_LENGTH) {
+    //     let header1 = RCstrFromGCS.substring(0, 2);
+    //     if (header1 === 'ff') {
+    //         let rc_data = RCstrFromGCS.substring(0, RC_LENGTH);
+    //         // console.log('(Serial) receive rc data - ' + rc_data);
+    //
+    //         if (sbusPort !== null) {
+    //             // console.log('ready to send');
+    //
+    //             sbusPort.write(Buffer.from(rc_data, 'hex'), () => {
+    //                 console.log('write to sbusPort ' + rc_data);
+    //             });
+    //         }
 
             // let mission_value = {};
             // mission_value.target_system = my_sysid;
@@ -631,8 +631,8 @@ function rcPortData(message) {
             // } catch (ex) {
             //     console.log('[ERROR] ' + ex);
             // }
-        }
-    }
+        // }
+    // }
 }
 
 function sbusPortOpening() {
