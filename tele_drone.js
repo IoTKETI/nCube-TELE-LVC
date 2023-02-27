@@ -358,7 +358,7 @@ function mavPortData(data) {
                     } else if (my_simul.toLowerCase() === 'off') {
                         if (rfPort !== null) {
                             rfPort.write(Buffer.from(mavPacket, 'hex'), () => {
-                                // console.log(mavPacket);
+                                console.log(mavPacket);
                             });
                         }
                     }
