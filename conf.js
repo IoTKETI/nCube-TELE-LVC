@@ -22,16 +22,16 @@ conf.useprotocol = 'http'; // select one for 'http' or 'mqtt' or 'coap' or 'ws'
 // build cse
 let ae_name = {};
 try {
-    ae_name = JSON.parse(fs.readFileSync('flight.json', 'utf8'));
+    ae_name = JSON.parse(fs.readFileSync('../flight.json', 'utf8'));
 } catch (e) {
-    console.log('can not find [ flight.json ] file');
+    console.log('can not find [ ../flight.json ] file');
     ae_name.host = '127.0.0.1';
     ae_name.gcs = 'KETI_LVC';
     ae_name.drone_name = "LVC_Drone";
     ae_name.sysid = 251;
     ae_name.simul = "on";
 
-    fs.writeFileSync('flight.json', JSON.stringify(ae_name, null, 4), 'utf8');
+    fs.writeFileSync('../flight.json', JSON.stringify(ae_name, null, 4), 'utf8');
 }
 
 my_gcs_name = ae_name.gcs;

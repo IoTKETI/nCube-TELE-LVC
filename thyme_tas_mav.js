@@ -220,9 +220,6 @@ function mavPortOpening() {
             sitlUDP.on('error', mavPortError);
         }
     } else {
-        mavPortNum = '/dev/ttyAMA0';
-        mavBaudrate = '115200';
-
         if (mavPort === null) {
             mavPort = new SerialPort({
                 path: mavPortNum,
@@ -330,12 +327,14 @@ function mavPortData(data) {
                         if (mqtt_client !== null) {
                             mqtt_client.publish(my_cnt_name, Buffer.from(mavPacket, 'hex'));
                         }
+                        send_aggr_to_Mobius(my_cnt_name, mavPacket, 2000);
                     } else if (my_simul.toLowerCase() === 'off') {
                         if (rfPort !== null) {
-                            rfPort.write(Buffer.from(mavPacket, 'hex'));
+                            rfPort.write(Buffer.from(mavPacket, 'hex'), () => {
+                                // console.log(mavPacket);
+                            });
                         }
                     }
-                    send_aggr_to_Mobius(my_cnt_name, mavPacket, 2000);
                     setTimeout(parseMavFromDrone, 0, mavPacket);
 
                     mavStrFromDrone = mavStrFromDrone.substring(mavLength);
@@ -355,12 +354,14 @@ function mavPortData(data) {
                         if (mqtt_client !== null) {
                             mqtt_client.publish(my_cnt_name, Buffer.from(mavPacket, 'hex'));
                         }
+                        send_aggr_to_Mobius(my_cnt_name, mavPacket, 2000);
                     } else if (my_simul.toLowerCase() === 'off') {
                         if (rfPort !== null) {
-                            rfPort.write(Buffer.from(mavPacket, 'hex'));
+                            rfPort.write(Buffer.from(mavPacket, 'hex'), () => {
+                                // console.log(mavPacket);
+                            });
                         }
                     }
-                    send_aggr_to_Mobius(my_cnt_name, mavPacket, 2000);
                     setTimeout(parseMavFromDrone, 0, mavPacket);
 
                     mavStrFromDrone = mavStrFromDrone.substring(mavLength);

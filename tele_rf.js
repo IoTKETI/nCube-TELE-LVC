@@ -164,7 +164,6 @@ function retrieve_my_cnt_name() {
     my_command_name = my_command_parent_name + '/' + info.name;
 
     MQTT_SUBSCRIPTION_ENABLE = 1;
-    sh_state = 'crtae';
     setTimeout(http_watchdog, normal_interval);
 
     tas_mav = require('./thyme_tas_mav');
@@ -183,6 +182,9 @@ function retrieve_my_cnt_name() {
                 }
             }, 5 * 1000);
         }
+        sh_state = 'crtae';
+    } else {
+        sh_state = 'crtci';
     }
 }
 
@@ -282,19 +284,17 @@ function http_watchdog() {
                 if (conf.sub.length <= count) {
                     sh_state = 'crtci';
 
-                    if (my_simul.toLowerCase() === 'off') {
-                        console.log("====================================\n\t Using real drone \t\t\n====================================");
-                        tas_mav.ready()
-                    } else {
-                        console.log("==============================\n\t Using SITL \t\t\n==============================");
-                    }
-
                     setTimeout(http_watchdog, normal_interval);
                 }
             }
         });
     } else if (sh_state === 'crtci') {
-        //setTimeout(check_rtv_cnt, 10000);
+        if (my_simul.toLowerCase() === 'off') {
+            console.log("====================================\n\t Using real drone \t\t\n====================================");
+            tas_mav.ready()
+        } else {
+            console.log("==============================\n\t Using SITL \t\t\n==============================");
+        }
     }
 }
 
