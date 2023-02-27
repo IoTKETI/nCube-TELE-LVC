@@ -580,7 +580,6 @@ let RCstrFromGCS = '';
 let RCstrFromGCSLength = 0;
 
 function rcPortData(message) {
-    console.log('rcPortData ', message.toString('hex'));
     RCstrFromGCS += message.toString('hex').toLowerCase();
 
     while (RCstrFromGCS.length >= RC_LENGTH) {
