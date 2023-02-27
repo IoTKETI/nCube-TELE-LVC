@@ -584,7 +584,7 @@ function rcPortData(message) {
             // console.log('(Serial) receive rc data - ' + rc_data);
 
             if (sbusPort !== null) {
-                console.log('ready to send');
+                // console.log('ready to send');
 
                 sbusPort.write(Buffer.from(rc_data, 'hex'), () => {
                     console.log('write to sbusPort ' + rc_data);
