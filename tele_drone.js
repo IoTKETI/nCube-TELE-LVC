@@ -579,7 +579,8 @@ const RC_LENGTH = 68;
 let RCstrFromGCS = '';
 
 function rcPortData(message) {
-    RCstrFromGCS += message.toString().toLowerCase();
+    console.log('rcPortData ', message.toString('hex'));
+    RCstrFromGCS += message.toString('hex').toLowerCase();
 
     while (RCstrFromGCS.length >= RC_LENGTH) {
         let header1 = RCstrFromGCS.substring(0, 2);
