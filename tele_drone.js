@@ -581,13 +581,14 @@ function rcPortData(message) {
         let header1 = RCstrFromGCS.substring(0, 2);
         if (header1 === 'ff') {
             let rc_data = RCstrFromGCS.substring(0, RC_LENGTH);
-            console.log('(Serial) receive rc data - ' + rc_data);
+            // console.log('(Serial) receive rc data - ' + rc_data);
 
             if (sbusPort !== null) {
                 sbusPort.write(Buffer.from(rc_data, 'hex'), () => {
                     console.log('send RC data to SBUS module');
                 });
             }
+
             let mission_value = {};
             mission_value.target_system = my_sysid;
             mission_value.target_component = 1;
