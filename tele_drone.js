@@ -576,6 +576,7 @@ let RCstrFromGCS = '';
 
 function rcPortData(message) {
     RCstrFromGCS += message.toString('hex').toLowerCase();
+    console.log('(Serial) origin rc data - ' + message.toString('hex'));
 
     while (RCstrFromGCS.length >= RC_LENGTH) {
         let header1 = RCstrFromGCS.substring(0, 2);
