@@ -669,7 +669,7 @@ function sbusPortData(message) {
 
     if (rcPort !== null) {
         rcPort.write(message, () => {
-            console.log("send res to RC");
+            // console.log("send res to RC");
         });
     }
 }
