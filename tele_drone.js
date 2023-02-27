@@ -267,7 +267,7 @@ var mavVersion = 'unknown';
 var mavVersionCheckFlag = false;
 
 function mavPortData(data) {
-    console.log('mavPortData ', data.toString('hex'));
+    console.log('mavPortData ', data.toString());
 
     mavStrFromDrone += data.toString('hex').toLowerCase();
 
