@@ -267,6 +267,8 @@ var mavVersion = 'unknown';
 var mavVersionCheckFlag = false;
 
 function mavPortData(data) {
+    console.log('mavPortData ', data.toString('hex'));
+
     mavStrFromDrone += data.toString('hex').toLowerCase();
 
     while (mavStrFromDrone.length > 20) {
@@ -321,7 +323,7 @@ function mavPortData(data) {
 
                 if ((mavStrFromDrone.length) >= mavLength) {
                     mavPacket = mavStrFromDrone.substring(0, mavLength);
-                    console.log('v1', mavPacket);
+                    // console.log('v1', mavPacket);
 
                     if (my_simul.toLowerCase() === 'on') {
                         if (mqtt_client !== null) {
@@ -348,7 +350,7 @@ function mavPortData(data) {
 
                 if (mavStrFromDrone.length >= mavLength) {
                     mavPacket = mavStrFromDrone.substring(0, mavLength);
-                    console.log('v2', mavPacket);
+                    // console.log('v2', mavPacket);
 
                     if (my_simul.toLowerCase() === 'on') {
                         if (mqtt_client !== null) {
