@@ -593,7 +593,7 @@ function rcPortData(message) {
                 // console.log('ready to send');
 
                 sbusPort.write(Buffer.from(rc_data, 'hex'), () => {
-                    console.log('write to sbusPort ' + rc_data);
+                    // console.log('write to sbusPort ' + rc_data);
                 });
             }
 
@@ -625,7 +625,7 @@ function rcPortData(message) {
                 } else {
                     if (rcPort !== null) {
                         rcPort.write(mission_signal, () => {
-                            console.log('write rcPort ' + mission_signal.toString('hex'));
+                            // console.log('write rcPort ' + mission_signal.toString('hex'));
                         });
                     }
                 }
