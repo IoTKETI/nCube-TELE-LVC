@@ -529,6 +529,8 @@ function rfPortError(error) {
 }
 
 function rfPortData(message) {
+    console.log('rfPortData ', message.toString('hex'));
+
     if (mavPort !== null) {
         mavPort.write(message, () => {
             console.log('Received FC command( ' + message.toString('hex') + ' ) from GCS');
