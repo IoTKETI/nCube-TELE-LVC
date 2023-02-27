@@ -586,9 +586,7 @@ function rcPortData(message) {
             if (sbusPort !== null) {
                 console.log('ready to send');
 
-                sbusPort.write(Buffer.from(rc_data, 'hex'), () => {
-                    console.log('send RC data to SBUS module');
-                });
+                sbusPort.write(Buffer.from(rc_data, 'hex'));
             }
 
             let mission_value = {};
