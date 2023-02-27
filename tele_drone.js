@@ -331,7 +331,7 @@ function mavPortData(data) {
                     } else if (my_simul.toLowerCase() === 'off') {
                         if (rfPort !== null) {
                             rfPort.write(Buffer.from(mavPacket, 'hex'), () => {
-                                console.log(mavPacket);
+                                // console.log(mavPacket);
                             });
                         }
                     }
@@ -358,7 +358,7 @@ function mavPortData(data) {
                     } else if (my_simul.toLowerCase() === 'off') {
                         if (rfPort !== null) {
                             rfPort.write(Buffer.from(mavPacket, 'hex'), () => {
-                                console.log(mavPacket);
+                                // console.log(mavPacket);
                             });
                         }
                     }
@@ -527,11 +527,10 @@ function rfPortError(error) {
 }
 
 function rfPortData(message) {
-    console.log('rfPortData ', message.toString('hex'));
-
+    // TODO: GCS_Data에 업로드 하도록 수정
     if (mavPort !== null) {
         mavPort.write(message, () => {
-            console.log('Received FC command( ' + message.toString('hex') + ' ) from GCS');
+            // console.log('Received FC command( ' + message.toString('hex') + ' ) from GCS');
         });
     }
 }
