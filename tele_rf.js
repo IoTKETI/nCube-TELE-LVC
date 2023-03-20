@@ -366,8 +366,8 @@ function mqtt_connect(serverip) {
                 console.log(init_info)
                 if (!started) {
                     tas_mav.ready()
-                    console.log('sh start_sitl.sh ' + init_info.dronelocation.lat + ' ' + init_info.dronelocation.lon + ' ' + init_info.dronelocation.alt + ' ' + init_info.dronelocation.hdg);
-                    exec('sh start_sitl.sh ' + init_info.dronelocation.lat + ' ' + init_info.dronelocation.lon + ' ' + init_info.dronelocation.alt + ' ' + init_info.dronelocation.hdg, {cwd: process.cwd()}, (error, stdout, stderr) => {
+                    console.log('sh start_sitl.sh ' + init_info.dronelocation.Lat + ' ' + init_info.dronelocation.Lon + ' ' + init_info.dronelocation.Alt + ' ' + init_info.dronelocation.Hdg);
+                    exec('sh start_sitl.sh ' + init_info.dronelocation.Lat + ' ' + init_info.dronelocation.Lon + ' ' + init_info.dronelocation.Alt + ' ' + init_info.dronelocation.Hdg, {cwd: process.cwd()}, (error, stdout, stderr) => {
                         if (error) {
                             console.log('error - ' + error);
                         }
