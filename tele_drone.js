@@ -618,9 +618,9 @@ function rcPortData(message) {
                 if (mission_signal == null) {
                     console.log("mavlink message is null");
                 } else {
-                    if (rcPort !== null) {
-                        rcPort.write(mission_signal, () => {
-                            // console.log('write rcPort ' + mission_signal.toString('hex'));
+                    if (rfPort !== null) {
+                        rfPort.write(mission_signal, () => {
+                            // console.log('write rfPort ' + mission_signal.toString('hex'));
                         });
                     }
                 }
