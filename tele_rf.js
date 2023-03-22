@@ -28,6 +28,11 @@ global.pub_start_init = '/LVC/init';
 global.init_flag = false;
 let init_t = null;
 
+let _m_ip_arr = my_master_ip.split('.');
+if (parseInt(_m_ip_arr[3]) > 1) {
+    slave_mqtt_connect(my_master_ip);
+}
+
 global.getType = function (p) {
     var type = 'string';
     if (Array.isArray(p)) {
@@ -337,7 +342,7 @@ function mqtt_connect(serverip) {
         mqtt_client = mqtt.connect(connectOptions);
 
         mqtt_client.on('connect', () => {
-            console.log('mqtt is connected to ( ' + serverip + ' )')
+            console.log('mqtt is connected to ( ' + serverip + ' )');
 
             if (mobius_sub_rc_topic !== '') {
                 mqtt_client.subscribe(mobius_sub_rc_topic, () => {
@@ -354,7 +359,7 @@ function mqtt_connect(serverip) {
                     console.log('[mqtt] sub_sim_info_for_start is subscribed: ' + sub_sim_info_for_start);
                 });
             }
-        })
+        });
 
         mqtt_client.on('message', (topic, message) => {
             if (topic === mobius_sub_rc_topic) {
@@ -384,12 +389,74 @@ function mqtt_connect(serverip) {
             } else {
                 console.log('Received Message ' + message.toString('hex') + ' From ' + topic);
             }
-        })
+        });
 
         mqtt_client.on('error', function (err) {
             console.log('[mqtt] (error) ' + err.message);
             mqtt_client = null;
             mqtt_connect(serverip);
-        })
+        });
+    }
+}
+
+function slave_mqtt_connect(serverip) {
+    if (slave_mqtt_client === null) {
+        if (conf.usesecure === 'disable') {
+            var connectOptions = {
+                host: serverip,
+                port: conf.cse.mqttport,
+                protocol: "mqtt",
+                keepalive: 10,
+                clientId: 'TELE_RF_' + nanoid(15),
+                protocolId: "MQTT",
+                protocolVersion: 4,
+                clean: true,
+                reconnectPeriod: 2000,
+                connectTimeout: 2000,
+                rejectUnauthorized: false
+            }
+        } else {
+            connectOptions = {
+                host: serverip,
+                port: conf.cse.mqttport,
+                protocol: "mqtts",
+                keepalive: 10,
+                clientId: 'TELE_RF_' + nanoid(15),
+                protocolId: "MQTT",
+                protocolVersion: 4,
+                clean: true,
+                reconnectPeriod: 2000,
+                connectTimeout: 2000,
+                key: fs.readFileSync("./server-key.pem"),
+                cert: fs.readFileSync("./server-crt.pem"),
+                rejectUnauthorized: false
+            }
+        }
+
+        slave_mqtt_client = mqtt.connect(connectOptions);
+
+        slave_mqtt_client.on('connect', () => {
+            console.log('slave_mqtt is connected to ( ' + serverip + ' )');
+
+            if (my_command_name !== '') {
+                slave_mqtt_client.subscribe(my_command_name, () => {
+                    console.log('[slave_mqtt] my_command_name is subscribed: ' + my_command_name);
+                });
+            }
+        });
+
+        slave_mqtt_client.on('message', (topic, message) => {
+            if (topic === my_command_name) {
+                tas_mav.gcs_noti_handler(message.toString('hex'));
+            } else {
+                console.log('Received Message ' + message.toString('hex') + ' From ' + topic);
+            }
+        });
+
+        slave_mqtt_client.on('error', function (err) {
+            console.log('[slave_mqtt] (error) ' + err.message);
+            slave_mqtt_client = null;
+            slave_mqtt_connect(serverip);
+        });
     }
 }

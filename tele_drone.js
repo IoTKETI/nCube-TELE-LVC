@@ -327,6 +327,10 @@ function mavPortData(data) {
                         if (mqtt_client !== null) {
                             mqtt_client.publish(my_cnt_name, Buffer.from(mavPacket, 'hex'));
                         }
+                        if (slave_mqtt_client !== null) {
+                            slave_mqtt_client.publish(my_cnt_name, Buffer.from(mavPacket, 'hex'));
+                        }
+
                         send_aggr_to_Mobius(my_cnt_name, mavPacket, 2000);
                     } else if (my_simul.toLowerCase() === 'off') {
                         if (rfPort !== null) {
@@ -354,6 +358,10 @@ function mavPortData(data) {
                         if (mqtt_client !== null) {
                             mqtt_client.publish(my_cnt_name, Buffer.from(mavPacket, 'hex'));
                         }
+                        if (slave_mqtt_client !== null) {
+                            slave_mqtt_client.publish(my_cnt_name, Buffer.from(mavPacket, 'hex'));
+                        }
+
                         send_aggr_to_Mobius(my_cnt_name, mavPacket, 2000);
                     } else if (my_simul.toLowerCase() === 'off') {
                         if (rfPort !== null) {
