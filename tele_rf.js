@@ -168,6 +168,12 @@ function retrieve_my_cnt_name() {
     my_command_parent_name = info.parent;
     my_command_name = my_command_parent_name + '/' + info.name;
 
+    if (my_command_name !== '') {
+        slave_mqtt_client.subscribe(my_command_name, () => {
+            console.log('[slave_mqtt] my_command_name is subscribed: ' + my_command_name);
+        });
+    }
+
     MQTT_SUBSCRIPTION_ENABLE = 1;
     setTimeout(http_watchdog, normal_interval);
 
@@ -437,12 +443,6 @@ function slave_mqtt_connect(serverip) {
 
         slave_mqtt_client.on('connect', () => {
             console.log('slave_mqtt is connected to ( ' + serverip + ' )');
-
-            if (my_command_name !== '') {
-                slave_mqtt_client.subscribe(my_command_name, () => {
-                    console.log('[slave_mqtt] my_command_name is subscribed: ' + my_command_name);
-                });
-            }
         });
 
         slave_mqtt_client.on('message', (topic, message) => {
