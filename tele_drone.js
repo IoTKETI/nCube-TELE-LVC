@@ -168,7 +168,7 @@ exports.gcs_noti_handler = function (message) {
         mission_value.ch14_raw = SBUS2RC(parseInt(rc_data.substring(60, 62), 16));   // CH 30
         mission_value.ch15_raw = SBUS2RC(parseInt(rc_data.substring(62, 64), 16));   // CH 31
         mission_value.ch16_raw = SBUS2RC(parseInt(rc_data.substring(64, 66), 16));   // CH 32
-        console.log(mission_value);
+        // console.log(mission_value);
 
         try {
             let mission_signal = mavlinkGenerateMessage(255, 0xbe, mavlink.MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE, mission_value);
